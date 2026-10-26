@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>מסלולי הצדקה - איתור מניינים ובניית מסלולים</title>
+    <meta name="theme-color" content="#1a237e">
+    <style>
+        :root {
+            --primary: #1a237e;
+            --primary-light: #283593;
+            --secondary: #d4af37;
+            --bg: #f4f6f9;
+            --card-bg: #ffffff;
+            --text: #2c3e50;
+            --text-light: #6c757d;
+            --border: #e0e0e0;
+            --shadow: 0 4px 12px rgba(0,0,0,0.08);
+            --radius: 12px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            padding-bottom: 75px;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            padding: 16px 20px;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        header h1 {
+            font-size: 1.4rem;
+            font-weight: 700;
+        }
+
+        header h1 span {
+            color: var(--secondary);
+        }
+
+        .mode-selector {
+            display: flex;
+            background: #e8eaf6;
+            margin: 12px;
+            padding: 4px;
+            border-radius: 10px;
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            background: transparent;
+            font-weight: bold;
+            font-size: 0.9rem;
+            color: var(--primary);
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .mode-btn.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 12px;
+        }
+
+        .filter-card {
+            background: var(--card-bg);
+            padding: 14px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            outline: none;
+            background: white;
+        }
+
+        .shul-card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 16px;
+            box-shadow: var(--shadow);
+            margin-bottom: 12px;
+            border-right: 5px solid var(--secondary);
+        }
+
+        .shul-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 6px;
+        }
+
+        .shul-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .shul-area {
+            font-size: 0.8rem;
+            background: #e8eaf6;
+            color: var(--primary);
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
+        .shul-address {
+            font-size: 0.88rem;
+            color: var(--text-light);
+            margin-bottom: 10px;
+        }
+
+        .route-window {
+            background: #fff8e1;
+            border: 1px solid var(--secondary);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            color: #795548;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .rating-box {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+
+        .stars {
+            color: #ffc107;
+            cursor: pointer;
+        }
+
+        .times-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+            background: #f8f9fa;
+            padding: 8px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+
+        .time-label {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            display: block;
+        }
+
+        .time-val {
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .nav-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.88rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            text-decoration: none;
+            color: white;
+        }
+
+        .btn-waze { background-color: #33ccff; color: #000; }
+        .btn-maps { background-color: #4285f4; }
+
+        .view-panel { display: none; }
+        .view-panel.active { display: block; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>✡️ <span>מסלולי הצדקה</span></h1>
+    </header>
+
+    <div class="mode-selector">
+        <button class="mode-btn active" onclick="switchMode('search', this)">🔍 חיפוש רגיל</button>
+        <button class="mode-btn" onclick="switchMode('route', this)">🗺️ מחולל מסלולים (3-5 דק')</button>
+    </div>
+
+    <div class="container">
+        <!-- Panel 1: Regular Search -->
+        <div id="panel-search" class="view-panel active">
+            <div class="filter-card">
+                <input type="text" id="searchInput" placeholder="חפש בית כנסת, כתובת, אזור..." oninput="renderAll()">
+                <div class="filter-row">
+                    <select id="areaFilter" onchange="renderAll()">
+                        <option value="">כל האזורים</option>
+                        <option value="Ridge">Ridge</option>
+                        <option value="North">North</option>
+                        <option value="West">West</option>
+                        <option value="Prospect/Pine">Prospect / Pine</option>
+                        <option value="Toms River">Toms River</option>
+                        <option value="Jackson">Jackson</option>
+                    </select>
+                    <select id="timeFilter" onchange="renderAll()">
+                        <option value="">כל התפילות</option>
+                        <option value="shacharis">שחרית</option>
+                        <option value="mincha">מנחה</option>
+                        <option value="maariv">מעריב</option>
+                    </select>
+                </div>
+            </div>
+            <div id="list-search"></div>
+        </div>
+
+        <!-- Panel 2: Smart Route Builder -->
+        <div id="panel-route" class="view-panel">
+            <div class="filter-card">
+                <div class="filter-row">
+                    <select id="routeType">
+                        <option value="walk">🏃 מרחק הליכה</option>
+                        <option value="drive">🚗 נסיעה קצרה (2-5 דק')</option>
+                    </select>
+                    <select id="routePrayer">
+                        <option value="shacharis">שחרית</option>
+                        <option value="mincha">מנחה</option>
+                        <option value="maariv">מעריב</option>
+                    </select>
+                </div>
+                <div class="filter-row">
+                    <input type="time" id="targetTime" value="08:00">
+                    <select id="routeArea">
+                        <option value="Ridge">אזור Ridge</option>
+                        <option value="West">אזור West</option>
+                        <option value="North">אזור North</option>
+                        <option value="Toms River">Toms River</option>
+                        <option value="Jackson">Jackson</option>
+                    </select>
+                </div>
+                <button onclick="calculateRoute()" style="background: var(--primary); color: white; padding: 10px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">⚡ חשב מסלול אופטימלי</button>
+            </div>
+            <div id="list-route"></div>
+        </div>
+    </div>
+
+    <script>
+        const shulsData = [
+            { id: 1, name: "בית יוסף שמואל", area: "Ridge", address: "215 East 5th St, Lakewood, NJ", shacharis: "06:43, 07:40, 09:00", mincha: "13:35, 19:00", maariv: "21:45", rating: 4.8 },
+            { id: 2, name: "תפלה למשה", area: "Ridge", address: "309 Ocean Ave, Lakewood, NJ", shacharis: "07:30, 08:30", mincha: "17:30, 18:30", maariv: "22:00", rating: 4.5 },
+            { id: 3, name: "סאדיגורא", area: "Ridge", address: "53 Holly St, Lakewood, NJ", shacharis: "07:45, 08:15, 09:15", mincha: "17:45, 18:30", maariv: "20:45, 22:15", rating: 4.9 },
+            { id: 4, name: "נדבורנא / תפארת שלום", area: "Ridge", address: "415 Monmouth Ave, Lakewood, NJ", shacharis: "06:45, 07:40, 08:40, 09:10", mincha: "13:40, 15:30", maariv: "21:15, 22:15", rating: 4.7 },
+            { id: 5, name: "נר ישראל", area: "Ridge", address: "733 Ridge Ave, Lakewood, NJ", shacharis: "07:00, 08:00, 09:00", mincha: "13:30, 18:00", maariv: "21:00, 22:00", rating: 4.6 },
+            { id: 6, name: "Westgate - Upstairs", area: "West", address: "100 Ropshitz Ct, Lakewood, NJ", shacharis: "07:00, 08:00, 09:00", mincha: "13:30, 17:00", maariv: "19:00, 20:00, 23:00", rating: 4.9 },
+            { id: 7, name: "Lutzk (לוטצק)", area: "West", address: "520 New Egypt Rd, Lakewood, NJ", shacharis: "07:00, 08:00, 09:00, 09:30", mincha: "13:08, 15:00", maariv: "19:00, 20:00, 23:00", rating: 5.0 },
+            { id: 8, name: "KBY - Rav Babad", area: "Toms River", address: "1767 Whitesville Rd, Toms River, NJ", shacharis: "06:30, 07:15, 08:00, 09:30", mincha: "13:15, 16:54", maariv: "20:00, 21:00", rating: 4.8 },
+            { id: 9, name: "Kol Aryeh", area: "Jackson", address: "521 Hope Chapel Rd, Jackson, NJ", shacharis: "06:00, 06:40, 07:50, 08:50", mincha: "17:30", maariv: "20:45, 23:00", rating: 4.6 }
+        ];
+
+        let ratings = JSON.parse(localStorage.getItem('shul_ratings')) || {};
+
+        function switchMode(mode, btn) {
+            document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+            
+            document.getElementById(`panel-${mode}`).classList.add('active');
+            btn.classList.add('active');
+
+            if(mode === 'route') calculateRoute();
+        }
+
+        function rateShul(id, stars) {
+            ratings[id] = stars;
+            localStorage.setItem('shul_ratings', JSON.stringify(ratings));
+            renderAll();
+        }
+
+        function createCard(shul, routeInfo = null) {
+            const encodedAddress = encodeURIComponent(shul.address);
+            const userRating = ratings[shul.id] || shul.rating;
+            
+            return `
+                <div class="shul-card">
+                    <div class="shul-header">
+                        <div class="shul-title">${shul.name}</div>
+                        <span class="shul-area">${shul.area}</span>
+                    </div>
+                    <div class="shul-address">📍 ${shul.address}</div>
+                    
+                    ${routeInfo ? `<div class="route-window">⏰ חלון הגעה אופטימלי: <b>${routeInfo}</b> (3-5 דק' מתחילת המניין)</div>` : ''}
+
+                    <div class="rating-box">
+                        <span>דירוג מניין:</span>
+                        <span class="stars" onclick="rateShul(${shul.id}, 5)">
+                            ${'⭐'.repeat(Math.round(userRating))} (${userRating})
+                        </span>
+                    </div>
+
+                    <div class="times-grid">
+                        <div><span class="time-label">שחרית</span><span class="time-val">${shul.shacharis}</span></div>
+                        <div><span class="time-label">מנחה</span><span class="time-val">${shul.mincha}</span></div>
+                        <div><span class="time-label">מעריב</span><span class="time-val">${shul.maariv}</span></div>
+                    </div>
+
+                    <div class="nav-buttons">
+                        <a href="https://waze.com/ul?q=${encodedAddress}&navigate=yes" target="_blank" class="nav-btn btn-waze">🚗 Waze</a>
+                        <a href="https://www.google.com/maps/search/?api=1&query=${encodedAddress}" target="_blank" class="nav-btn btn-maps">🗺️ Google Maps</a>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderAll() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const area = document.getElementById('areaFilter').value;
+            const time = document.getElementById('timeFilter').value;
+
+            const filtered = shulsData.filter(s => {
+                const matchText = s.name.toLowerCase().includes(search) || s.address.toLowerCase().includes(search);
+                const matchArea = !area || s.area === area;
+                let matchTime = true;
+                if(time === 'shacharis') matchTime = !!s.shacharis;
+                if(time === 'mincha') matchTime = !!s.mincha;
+                if(time === 'maariv') matchTime = !!s.maariv;
+                return matchText && matchArea && matchTime;
+            });
+
+            document.getElementById('list-search').innerHTML = filtered.map(s => createCard(s)).join('') || '<p style="text-align:center; padding:20px;">לא נמצאו תוצאות.</p>';
+        }
+
+        function calculateRoute() {
+            const prayer = document.getElementById('routePrayer').value;
+            const area = document.getElementById('routeArea').value;
+            
+            const areaShuls = shulsData.filter(s => s.area === area);
+            let routeHTML = '';
+
+            areaShuls.forEach(s => {
+                const times = s[prayer].split(', ');
+                times.forEach(t => {
+                    const [h, m] = t.trim().split(':').map(Number);
+                    if(!isNaN(h)) {
+                        const startM = m + 3;
+                        const endM = m + 8;
+                        const timeWindow = `${h}:${startM < 10 ? '0'+startM : startM} - ${h}:${endM < 10 ? '0'+endM : endM}`;
+                        routeHTML += createCard(s, timeWindow);
+                    }
+                });
+            });
+
+            document.getElementById('list-route').innerHTML = routeHTML || '<p style="text-align:center; padding:20px;">אין מניינים תואמים באזור זה.</p>';
+        }
+
+        renderAll();
+    </script>
+</body>
+</html>
