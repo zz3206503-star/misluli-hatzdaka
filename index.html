@@ -3,12 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>מסלולי הצדקה - ניהול בתי כנסת ותכנון מסלולים</title>
+    <title>מסלולי הצדקה - המניין הקרוב אלי</title>
     <style>
         :root {
             --primary-color: #1e3a8a;
             --secondary-color: #3b82f6;
-            --accent-color: #f59e0b;
             --success-color: #10b981;
             --bg-color: #f8fafc;
             --card-bg: #ffffff;
@@ -21,14 +20,14 @@
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
 
         body {
             background-color: var(--bg-color);
             color: var(--text-color);
             line-height: 1.6;
-            padding-bottom: 50px;
+            padding-bottom: 40px;
         }
 
         header {
@@ -36,58 +35,17 @@
             color: white;
             padding: 2rem 1rem;
             text-align: center;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
 
         header h1 {
-            font-size: 2.5rem;
+            font-size: 2rem;
             margin-bottom: 0.5rem;
         }
 
-        header p {
-            font-size: 1.1rem;
-            opacity: 0.9;
-        }
-
         .container {
-            max-width: 1200px;
+            max-width: 800px;
             margin: 0 auto;
-            padding: 2rem 1rem;
-        }
-
-        .nav-tabs {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 2rem;
-            border-bottom: 2px solid var(--border-color);
-            padding-bottom: 0.5rem;
-            overflow-x: auto;
-        }
-
-        .tab-btn {
-            background: none;
-            border: none;
-            font-size: 1.1rem;
-            font-weight: bold;
-            color: var(--text-light);
-            cursor: pointer;
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            transition: all 0.2s;
-            white-space: nowrap;
-        }
-
-        .tab-btn.active {
-            background-color: var(--secondary-color);
-            color: white;
-        }
-
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
+            padding: 1.5rem 1rem;
         }
 
         .card {
@@ -99,32 +57,14 @@
             border: 1px solid var(--border-color);
         }
 
-        .search-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 1rem;
-            margin-top: 1rem;
-        }
-
-        input, select, button {
-            width: 100%;
-            padding: 0.75rem 1rem;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            font-size: 1rem;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-
-        input:focus, select:focus {
-            border-color: var(--secondary-color);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
-        }
-
         button {
+            width: 100%;
+            padding: 0.85rem 1rem;
             background-color: var(--secondary-color);
             color: white;
             border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
             font-weight: bold;
             cursor: pointer;
             transition: background-color 0.2s;
@@ -134,259 +74,112 @@
             background-color: var(--primary-color);
         }
 
-        .btn-success {
-            background-color: var(--success-color);
-        }
-        .btn-success:hover {
-            background-color: #059669;
-        }
-
-        .synagogues-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 1.5rem;
+        .result-box {
             margin-top: 1.5rem;
         }
 
-        .synagogue-card {
-            background: white;
-            border-radius: 10px;
-            border: 1px solid var(--border-color);
-            padding: 1.25rem;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-            position: relative;
-        }
-
-        .synagogue-card h3 {
-            color: var(--primary-color);
-            margin-bottom: 0.5rem;
-            font-size: 1.25rem;
-        }
-
-        .synagogue-card p {
-            color: var(--text-light);
-            font-size: 0.95rem;
-            margin-bottom: 0.75rem;
-        }
-
-        .times-list {
+        .minyan-card {
             background: #f1f5f9;
-            padding: 0.75rem;
-            border-radius: 6px;
-            font-size: 0.9rem;
+            border-radius: 8px;
+            padding: 1.25rem;
+            border: 1px solid var(--border-color);
             margin-bottom: 1rem;
         }
 
-        .badge {
-            display: inline-block;
-            background-color: #e0f2fe;
-            color: #0369a1;
-            padding: 0.25rem 0.5rem;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            font-weight: bold;
+        .minyan-card h3 {
+            color: var(--primary-color);
             margin-bottom: 0.5rem;
         }
 
-        .route-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: #f8fafc;
-            padding: 1rem;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-            margin-bottom: 0.75rem;
+        .timing-guide {
+            background: #e0f2fe;
+            color: #0369a1;
+            padding: 0.75rem;
+            border-radius: 6px;
+            margin-top: 0.75rem;
+            font-size: 0.95rem;
         }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>מסלולי הצדקה</h1>
-        <p>ניהול מתקדם של בתי כנסת, זמני תפילה ותכנון מסלולים (CLICK613)</p>
+        <h1>המניין הקרוב אלי</h1>
+        <p>איתור אוטומטי של בתי כנסת וזמני הגעה מומלצים</p>
     </header>
 
     <div class="container">
-        <!-- ניווט בין לשוניות -->
-        <div class="nav-tabs">
-            <button class="tab-btn active" onclick="switchTab('searchTab', this)">🔍 חיפוש ובתי כנסת</button>
-            <button class="tab-btn" onclick="switchTab('routeTab', this)">🗺️ מסלול הצדקה שלי (<span id="routeCount">0</span>)</button>
-            <button class="tab-btn" onclick="switchTab('settingsTab', this)">⚙️ ניהול וגיבוי נתונים</button>
+        <div class="card" style="text-align: center;">
+            <h2>מצא את המניין הבא לפי המיקום שלך</h2>
+            <p style="color: var(--text-light); margin: 1rem 0;">לחץ על הכפתור כדי לאפשר למכשיר למצוא אותך ולהציג את בתי הכנסת הקרובים ביותר עם שחרית, מנחה וערבית.</p>
+            <button onclick="findClosestMinyan()">📍 מצא מניין קרוב אליי עכשיו</button>
         </div>
 
-        <!-- לשונית חיפוש -->
-        <div id="searchTab" class="tab-content active">
-            <div class="card">
-                <h2>חיפוש בתי כנסת ומניינים</h2>
-                <div class="search-grid">
-                    <input type="text" id="searchInput" placeholder="חפש לפי שם בית כנסת או כתובת..." oninput="filterSynagogues()">
-                    <select id="citySelect" onchange="filterSynagogues()">
-                        <option value="">כל האזורים</option>
-                        <option value="Lakewood">לייקווד (Lakewood)</option>
-                        <option value="Monsey">מונסי (Monsey)</option>
-                        <option value="Brooklyn">ברוקלין (Brooklyn)</option>
-                        <option value="Toms River">טמס ריבר (Toms River)</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="card">
-                <h2>רשימת בתי הכנסת והמניינים</h2>
-                <div id="synagoguesContainer" class="synagogues-grid"></div>
-            </div>
-        </div>
-
-        <!-- לשונית מסלולים -->
-        <div id="routeTab" class="tab-content">
-            <div class="card">
-                <h2>תכנון מסלול התרומות והתפילות שלך</h2>
-                <p style="color: var(--text-light); margin-bottom: 1.5rem;">כאן תוכל לראות את כל בתי הכנסת שהוספת למסלול האישי שלך בסדר הגיוני.</p>
-                <div id="routeContainer">
-                    <p style="text-align: center; color: var(--text-light);">המסלול שלך ריק. הוסף בתי כנסת מתוך לשונית החיפוש.</p>
-                </div>
-                <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
-                    <button class="btn-success" onclick="alert('המסלול נשמר בהצלחה!')">שמור ושתף מסלול</button>
-                    <button style="background-color: #ef4444;" onclick="clearRoute()">נקה מסלול</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- לשונית הגדרות וגיבוי -->
-        <div id="settingsTab" class="tab-content">
-            <div class="card">
-                <h2>גיבוי ושחזור נתונים (JSON)</h2>
-                <p style="color: var(--text-light); margin-bottom: 1rem;">ייצא או ייבא את הנתונים שלך כדי לגבות את המסלולים ובתי הכנסת.</p>
-                <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-                    <button onclick="exportData()" style="flex: 1;">ייצא נתונים לקובץ JSON</button>
-                </div>
+        <div class="card">
+            <h2>תוצאות והמלצות הגעה</h2>
+            <div id="resultsContainer" class="result-box">
+                <p style="text-align: center; color: var(--text-light);">טרם בוצעה איתור מיקום. לחץ על הכפתור למעלה.</p>
             </div>
         </div>
     </div>
 
     <script>
-        // מאגר נתונים מורחב מתוך CLICK613
-        const synagoguesData = [
-            { id: 1, name: "בית המדרש הגדול לייקווד", city: "Lakewood", address: "Lakewood, NJ", shachris: ["06:00", "07:00", "08:00"], mincha: ["13:30", "15:00"], maariv: ["21:00", "22:00"] },
-            { id: 2, name: "קהילת בני ישראל", city: "Monsey", address: "Monsey, NY", shachris: ["06:30", "07:30"], mincha: ["14:00"], maariv: ["20:30"] },
-            { id: 3, name: "שומרי שבת ברוקלין", city: "Brooklyn", address: "Brooklyn, NY", shachris: ["07:00", "08:15"], mincha: ["13:45", "16:00"], maariv: ["21:30"] },
-            { id: 4, name: "היכל התורה טמס ריבר", city: "Toms River", address: "Toms River, NJ", shachris: ["06:15", "07:15", "08:30"], mincha: ["13:15", "15:45"], maariv: ["21:15"] },
-            { id: 5, name: "כנסת ישראל לייקווד", city: "Lakewood", address: "Lakewood, NJ", shachris: ["06:30", "07:45"], mincha: ["14:15", "16:30"], maariv: ["22:15"] }
+        // מאגר בתי כנסת כולל קואורדינטות משוערות לבדיקת מרחק
+        const synagogues = [
+            { name: "בית המדרש הגדול (BMG)", address: "101 7th St, Lakewood, NJ", lat: 40.096, lng: -74.222, shachris: ["07:00", "08:00"], mincha: ["13:30", "16:45"], maariv: ["21:00", "22:00"] },
+            { name: "קהילת בני ישראל", address: "45 Route 59, Monsey, NY", lat: 41.111, lng: -74.062, shachris: ["06:30", "07:30"], mincha: ["14:00", "16:15"], maariv: ["20:30", "21:45"] },
+            { name: "שומרי שבת ברוקלין", address: "123 13th Ave, Brooklyn, NY", lat: 40.632, lng: -73.990, shachris: ["07:00", "08:15"], mincha: ["13:45", "16:00"], maariv: ["21:30"] },
+            { name: "היכל התורה טמס ריבר", address: "1100 Hooper Ave, Toms River, NJ", lat: 40.015, lng: -74.194, shachris: ["06:15", "07:15"], mincha: ["13:15", "15:45"], maariv: ["21:15"] }
         ];
 
-        let myRoute = [];
-
-        function switchTab(tabId, btn) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
-            btn.classList.add('active');
-        }
-
-        function renderSynagogues(data) {
-            const container = document.getElementById('synagoguesContainer');
-            container.innerHTML = '';
-
-            if (data.length === 0) {
-                container.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-light);">לא נמצאו בתי כנסת העונים על החיפוש.</p>';
+        function findClosestMinyan() {
+            const container = document.getElementById('resultsContainer');
+            
+            if (!navigator.geolocation) {
+                container.innerHTML = '<p style="color: red; text-align: center;">הדפדפן שלך אינו תומך באיתור מיקום (Geolocation).</p>';
                 return;
             }
 
-            data.forEach(syn => {
-                const card = document.createElement('div');
-                card.className = 'synagogue-card';
-                card.innerHTML = `
-                    <div>
-                        <span class="badge">${syn.city}</span>
-                        <h3>${syn.name}</h3>
-                        <p>📍 ${syn.address}</p>
-                        <div class="times-list">
-                            <strong>שחרית:</strong> ${syn.shachris.join(', ')}<br>
-                            <strong>מנחה:</strong> ${syn.mincha.join(', ')}<br>
-                            <strong>מעריב:</strong> ${syn.maariv.join(', ')}
-                        </div>
-                    </div>
-                    <button class="btn-success" onclick="addToRoute(${syn.id})">הוסף למסלול הצדקה</button>
-                `;
-                container.appendChild(card);
-            });
+            container.innerHTML = '<p style="text-align: center; color: var(--text-light);">מאותר מיקום... אנא המתן.</p>';
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const userLat = position.coords.latitude;
+                    const userLng = position.coords.longitude;
+
+                    // חישוב מרחק פשוט לכל בית כנסת
+                    const scored = synagogues.map(syn => {
+                        const dist = Math.sqrt(Math.pow(syn.lat - userLat, 2) + Math.pow(syn.lng - userLng, 2));
+                        return { ...syn, distance: dist };
+                    });
+
+                    // מיון לפי הקרוב ביותר
+                    scored.sort((a, b) => a.distance - b.distance);
+
+                    container.innerHTML = '';
+                    scored.slice(0, 3).forEach((syn, index) => {
+                        const card = document.createElement('div');
+                        card.className = 'minyan-card';
+                        card.innerHTML = `
+                            <h3>#${index + 1} - ${syn.name}</h3>
+                            <p>📍 ${syn.address}</p>
+                            <div style="margin-top: 0.5rem; font-size: 0.95rem;">
+                                <strong>שחרית:</strong> ${syn.shachris.join(', ')}<br>
+                                <strong>מנחה:</strong> ${syn.mincha.join(', ')}<br>
+                                <strong>ערבית:</strong> ${syn.maariv.join(', ')}
+                            </div>
+                            <div class="timing-guide">
+                                🕒 <strong>המלצת הגעה:</strong> מומלץ לצאת מהבית כ-15 דקות לפני שעת המניין, להגיע 10 דקות קודם לתפילה, וצפי חזרה משוער כשעה מרגע היציאה.
+                            </div>
+                        `;
+                        container.appendChild(card);
+                    });
+                },
+                (error) => {
+                    container.innerHTML = '<p style="color: red; text-align: center;">שגיאה באיתור המיקום. וודא שהרשאת מיקום מופעלת בדפדפן.</p>';
+                }
+            );
         }
-
-        function filterSynagogues() {
-            const searchText = document.getElementById('searchInput').value.toLowerCase();
-            const selectedCity = document.getElementById('citySelect').value;
-
-            const filtered = synagoguesData.filter(syn => {
-                const matchesSearch = syn.name.toLowerCase().includes(searchText) || syn.address.toLowerCase().includes(searchText);
-                const matchesCity = selectedCity === "" || syn.city === selectedCity;
-                return matchesSearch && matchesCity;
-            });
-
-            renderSynagogues(filtered);
-        }
-
-        function addToRoute(id) {
-            const syn = synagoguesData.find(s => s.id === id);
-            if (syn && !myRoute.some(s => s.id === id)) {
-                myRoute.push(syn);
-                updateRouteUI();
-                alert(`נוסף בהצלחה למסלול: ${syn.name}`);
-            } else {
-                alert('בית הכנסת כבר קיים במסלול שלך.');
-            }
-        }
-
-        function updateRouteUI() {
-            document.getElementById('routeCount').innerText = myRoute.length;
-            const container = document.getElementById('routeContainer');
-
-            if (myRoute.length === 0) {
-                container.innerHTML = '<p style="text-align: center; color: var(--text-light);">המסלול שלך ריק. הוסף בתי כנסת מתוך לשונית החיפוש.</p>';
-                return;
-            }
-
-            container.innerHTML = '';
-            myRoute.forEach((syn, index) => {
-                const item = document.createElement('div');
-                item.className = 'route-item';
-                item.innerHTML = `
-                    <div>
-                        <strong>#${index + 1} - ${syn.name}</strong>
-                        <p style="margin: 0; font-size: 0.9rem; color: var(--text-light);">${syn.address}</p>
-                    </div>
-                    <button style="width: auto; background-color: #ef4444; padding: 0.5rem 1rem;" onclick="removeFromRoute(${syn.id})">הסר</button>
-                `;
-                container.appendChild(item);
-            });
-        }
-
-        function removeFromRoute(id) {
-            myRoute = myRoute.filter(s => s.id !== id);
-            updateRouteUI();
-        }
-
-        function clearRoute() {
-            if (confirm('האם אתה בטוח שברצונך לנקות את המסלול?')) {
-                myRoute = [];
-                updateRouteUI();
-            }
-        }
-
-        function exportData() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(myRoute));
-            const downloadAnchor = document.createElement('a');
-            downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", "my_charity_route.json");
-            document.body.appendChild(downloadAnchor);
-            downloadAnchor.click();
-            downloadAnchor.remove();
-        }
-
-        // אתחול ראשוני
-        renderSynagogues(synagoguesData);
     </script>
 </body>
 </html>
