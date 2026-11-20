@@ -1,185 +1,31 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="he" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>מסלולי הצדקה - המניין הקרוב אלי</title>
-    <style>
-        :root {
-            --primary-color: #1e3a8a;
-            --secondary-color: #3b82f6;
-            --success-color: #10b981;
-            --bg-color: #f8fafc;
-            --card-bg: #ffffff;
-            --text-color: #1e293b;
-            --text-light: #64748b;
-            --border-color: #e2e8f0;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        }
-
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            line-height: 1.6;
-            padding-bottom: 40px;
-        }
-
-        header {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            color: white;
-            padding: 2rem 1rem;
-            text-align: center;
-        }
-
-        header h1 {
-            font-size: 2rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 1.5rem 1rem;
-        }
-
-        .card {
-            background: var(--card-bg);
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-            border: 1px solid var(--border-color);
-        }
-
-        button {
-            width: 100%;
-            padding: 0.85rem 1rem;
-            background-color: var(--secondary-color);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-
-        button:hover {
-            background-color: var(--primary-color);
-        }
-
-        .result-box {
-            margin-top: 1.5rem;
-        }
-
-        .minyan-card {
-            background: #f1f5f9;
-            border-radius: 8px;
-            padding: 1.25rem;
-            border: 1px solid var(--border-color);
-            margin-bottom: 1rem;
-        }
-
-        .minyan-card h3 {
-            color: var(--primary-color);
-            margin-bottom: 0.5rem;
-        }
-
-        .timing-guide {
-            background: #e0f2fe;
-            color: #0369a1;
-            padding: 0.75rem;
-            border-radius: 6px;
-            margin-top: 0.75rem;
-            font-size: 0.95rem;
-        }
-    </style>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#183b32"><meta name="description" content="מסלול שחרית חי — זמני CLICK613 ומיקומי בתי כנסת, GPS וסימון מניינים">
+<link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="style.css"><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzxWTQzZlCHjhu8TgrFZ0eKpIA=" crossorigin="">
+<title>מסלול חי | שחרית CLICK613</title>
 </head>
 <body>
-
-    <header>
-        <h1>המניין הקרוב אלי</h1>
-        <p>איתור אוטומטי של בתי כנסת וזמני הגעה מומלצים</p>
-    </header>
-
-    <div class="container">
-        <div class="card" style="text-align: center;">
-            <h2>מצא את המניין הבא לפי המיקום שלך</h2>
-            <p style="color: var(--text-light); margin: 1rem 0;">לחץ על הכפתור כדי לאפשר למכשיר למצוא אותך ולהציג את בתי הכנסת הקרובים ביותר עם שחרית, מנחה וערבית.</p>
-            <button onclick="findClosestMinyan()">📍 מצא מניין קרוב אליי עכשיו</button>
-        </div>
-
-        <div class="card">
-            <h2>תוצאות והמלצות הגעה</h2>
-            <div id="resultsContainer" class="result-box">
-                <p style="text-align: center; color: var(--text-light);">טרם בוצעה איתור מיקום. לחץ על הכפתור למעלה.</p>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // מאגר בתי כנסת כולל קואורדינטות משוערות לבדיקת מרחק
-        const synagogues = [
-            { name: "בית המדרש הגדול (BMG)", address: "101 7th St, Lakewood, NJ", lat: 40.096, lng: -74.222, shachris: ["07:00", "08:00"], mincha: ["13:30", "16:45"], maariv: ["21:00", "22:00"] },
-            { name: "קהילת בני ישראל", address: "45 Route 59, Monsey, NY", lat: 41.111, lng: -74.062, shachris: ["06:30", "07:30"], mincha: ["14:00", "16:15"], maariv: ["20:30", "21:45"] },
-            { name: "שומרי שבת ברוקלין", address: "123 13th Ave, Brooklyn, NY", lat: 40.632, lng: -73.990, shachris: ["07:00", "08:15"], mincha: ["13:45", "16:00"], maariv: ["21:30"] },
-            { name: "היכל התורה טמס ריבר", address: "1100 Hooper Ave, Toms River, NJ", lat: 40.015, lng: -74.194, shachris: ["06:15", "07:15"], mincha: ["13:15", "15:45"], maariv: ["21:15"] }
-        ];
-
-        function findClosestMinyan() {
-            const container = document.getElementById('resultsContainer');
-            
-            if (!navigator.geolocation) {
-                container.innerHTML = '<p style="color: red; text-align: center;">הדפדפן שלך אינו תומך באיתור מיקום (Geolocation).</p>';
-                return;
-            }
-
-            container.innerHTML = '<p style="text-align: center; color: var(--text-light);">מאותר מיקום... אנא המתן.</p>';
-
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    const userLat = position.coords.latitude;
-                    const userLng = position.coords.longitude;
-
-                    // חישוב מרחק פשוט לכל בית כנסת
-                    const scored = synagogues.map(syn => {
-                        const dist = Math.sqrt(Math.pow(syn.lat - userLat, 2) + Math.pow(syn.lng - userLng, 2));
-                        return { ...syn, distance: dist };
-                    });
-
-                    // מיון לפי הקרוב ביותר
-                    scored.sort((a, b) => a.distance - b.distance);
-
-                    container.innerHTML = '';
-                    scored.slice(0, 3).forEach((syn, index) => {
-                        const card = document.createElement('div');
-                        card.className = 'minyan-card';
-                        card.innerHTML = `
-                            <h3>#${index + 1} - ${syn.name}</h3>
-                            <p>📍 ${syn.address}</p>
-                            <div style="margin-top: 0.5rem; font-size: 0.95rem;">
-                                <strong>שחרית:</strong> ${syn.shachris.join(', ')}<br>
-                                <strong>מנחה:</strong> ${syn.mincha.join(', ')}<br>
-                                <strong>ערבית:</strong> ${syn.maariv.join(', ')}
-                            </div>
-                            <div class="timing-guide">
-                                🕒 <strong>המלצת הגעה:</strong> מומלץ לצאת מהבית כ-15 דקות לפני שעת המניין, להגיע 10 דקות קודם לתפילה, וצפי חזרה משוער כשעה מרגע היציאה.
-                            </div>
-                        `;
-                        container.appendChild(card);
-                    });
-                },
-                (error) => {
-                    container.innerHTML = '<p style="color: red; text-align: center;">שגיאה באיתור המיקום. וודא שהרשאת מיקום מופעלת בדפדפן.</p>';
-                }
-            );
-        }
-    </script>
+<header class="head"><div class="brand"><span class="mark">⌖</span><div><strong>מסלול חי</strong><small>שחרית בלבד · CLICK613</small></div></div><div class="clock" id="clock" aria-live="polite">--:--</div></header>
+<main id="main">
+<section class="intro" id="intro"><div class="introArt" aria-hidden="true">✡</div><div class="eyebrow">אפליקציה חדשה · GitHub Pages</div><h1>איפה המניין הקרוב?</h1><p>כל בתי הכנסת, כל שעות השחרית לפי CLICK613, מיקום GPS ומסלול שמתעדכן לפי השעה והמיקום שלך.</p><button class="primary big" id="openLive">📍 מסלול חי</button><p class="subtle">זמני יום ראשון יופיעו בנפרד בכל בית כנסת. לכל שעה סימון אישי באדום.</p></section>
+<section id="live" class="hidden">
+ <div class="notice" id="sourceNotice">טוען את רשימת CLICK613…</div>
+ <div class="gps-row"><div class="gps-text"><strong id="gpsTitle">לא התקבל מיקום GPS</strong><small id="gpsSubtitle">לדיוק מלא יש לאשר גישה למיקום בדפדפן</small></div><button class="primary" id="startGPS">📍 הפעל GPS</button></div>
+ <section class="filters" aria-label="סינון"><div class="field"><label for="dayMode">יום</label><select id="dayMode"><option value="auto">לפי היום</option><option value="weekday">ימי חול (ב׳–ו׳)</option><option value="sunday">יום ראשון</option></select></div><div class="field"><label for="areaSelect">אזור / מיקום חלופי</label><select id="areaSelect"><option value="">בחר אזור</option></select></div><div class="field stretch"><label for="search">חיפוש בית כנסת / כתובת</label><input id="search" type="search" placeholder="שם או רחוב"></div></section>
+ <div class="status-row"><div id="dayInfo"></div><button class="ghost" id="refresh">↻ חשב מחדש</button></div>
+ <section class="pane" aria-label="מסלול חי"><div class="section-title"><h2>המסלול שלך עכשיו</h2><span class="smalltag" id="planCount">0 תחנות</span></div><p class="hint" id="planExplanation">הפעל GPS לקבלת הצעות קרובות</p><div id="routeList" class="route-list"></div><p class="smallprint" id="etaDisclaimer">הזמנים והמרחקים במסלול הם הערכה. אין מידע פקקים חי; ניווט בווייז מציג נתוני תנועה באפליקציית הניווט.</p></section>
+ <section class="pane"><div class="section-title"><h2>כל בתי הכנסת והשעות</h2><span id="shulCount" class="smalltag">—</span></div><p class="hint">לכל מניין כפתור נפרד. לחץ עליו כדי לצבוע אותו באדום; לחץ שוב לביטול. הסימון לא מסתיר את המניין.</p><div id="shulList" class="shul-list"></div></section>
+ <section class="pane"><div class="section-title"><h2>מפת המיקומים</h2><button id="toggleMap" class="ghost" aria-expanded="false">הצג מפה</button></div><div id="mapHolder" class="hidden"><div id="map"></div><small class="smallprint">© OpenStreetMap contributors · מיקומים עשויים להיות בקירוב. קווי החיבור אינם מסלול נסיעה.</small></div></section>
+ <details class="pane"><summary>תיקוני מיקום וסנכרון מהרשימה שלי</summary><div class="tools"><p class="hint">מיקומים ראשוניים מתוך רשימת <a id="googleSavedList" href="https://maps.app.goo.gl/D2TKBofCwXd8EBGHA?g_st=ac" target="_blank" rel="noopener">Google Maps — בתי כנסת</a> שנשמרה בעבר (צילום נתונים מ־8.11.2026). הקישור לבדו אינו מאפשר סנכרון חי של רשימה פרטית. ניתן לייבא קובץ מיקומים מעודכן או לבחור מיקום ידנית. זמני תפילה אינם מיובאים לעולם.</p>
+ <div class="fileline"><label for="importFile" class="secondary fakebutton">ייבא מיקומים (CSV / JSON / KML)</label><input type="file" id="importFile" accept=".csv,.json,.geojson,.kml,.txt"><button class="secondary" id="exportFixes">ייצא תיקוני מיקום</button></div><small class="smallprint">ייצוא תיקונים מאפשר להעבירם למכשיר אחר או לשלוח את הקובץ לכאן לצורך גרסה חדשה. תיקונים מקומיים נשמרים בדפדפן במכשיר זה.</small><div id="importStatus" role="status"></div></div></details>
+ </section>
+</main>
+<div id="locationDialog" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modalContent"><div class="modalHead"><h2 id="modalTitle">תיקון מיקום</h2><button class="close" id="closeDialog" aria-label="סגור">×</button></div><p class="hint" id="modalDescription"></p><label for="candidateSelect">בחר מבין המיקומים האפשריים</label><select id="candidateSelect"><option value="">בחר מיקום</option></select><label for="locationInput">או הדבק קישור Google Maps עם קואורדינטות, או כתוב latitude,longitude</label><input type="text" id="locationInput" dir="ltr" placeholder="40.095, -74.21"><button class="secondary" id="pickMap">בחר נקודה בלחיצה על המפה</button><p class="smallprint">לאחר בחירת הנקודה במפה תיפתח שוב חלונית התיקון, כדי שתוכל לשמור אותה.</p><div class="modalActions"><button id="saveLocation" class="primary">שמור מיקום</button><button id="clearLocation" class="secondary">חזור למיקום המקורי</button></div><div id="modalStatus" role="status"></div></div></div>
+<div id="toast" class="toast hidden" role="status"></div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="app.js" defer></script>
 </body>
 </html>
