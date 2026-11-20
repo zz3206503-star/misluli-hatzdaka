@@ -1,5 +1,5 @@
 // Network-first service worker: online visitors receive the latest deployed files.
-const VERSION='maslul-live-auto-20261120-v5';
+const VERSION='maslul-live-auto-20261120-v8';
 const FILES=['./','./index.html','./browser-link.html','./styles.css','./app.js','./i18n.js','./places.json','./manifest.webmanifest','./icon-64.png','./icon-192.png','./icon-512.png'];
 self.addEventListener('install',event=>{
  event.waitUntil(caches.open(VERSION).then(cache=>cache.addAll(FILES)).then(()=>self.skipWaiting()));
@@ -19,7 +19,7 @@ self.addEventListener('fetch',event=>{
    if(fresh.ok)cache.put(request,fresh.clone()).catch(()=>{});
    return fresh;
   }catch(err){
-   const cached=await cache.match(request,{ignoreSearch:request.mode==='navigate'});
+   const cached=await cache.match(request,{ignoreSearch:true});
    if(cached)return cached;
    if(request.mode==='navigate'){
     const home=await cache.match('./index.html');if(home)return home;
