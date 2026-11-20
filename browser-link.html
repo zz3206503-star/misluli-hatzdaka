@@ -1,24 +1,9 @@
-<!doctype html>
-<html lang="he" dir="rtl"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#123c45">
-<title>התקנת קישור לפתיחה בדפדפן — מסלול הצדקה חי</title>
-<link rel="icon" href="icon-64.png" type="image/png">
-<link rel="stylesheet" href="styles.css">
-<script>
-(function(){
- var isSetup=false;
- try{isSetup=sessionStorage.getItem('maslul-browser-shortcut-setup')==='1';sessionStorage.removeItem('maslul-browser-shortcut-setup');}catch(e){}
- // When launched from a home-screen shortcut in a fresh browser session, go straight to the route site.
- if(!isSetup)location.replace('./?from=browser-shortcut');
-})();
-</script></head><body>
-<header class="topbar"><div class="brand"><img class="brand-icon" src="icon-64.png" alt="בית כנסת ומסלול">מסלול הצדקה חי</div></header>
-<main class="shortcutPage">
-<img class="shortIcon" src="icon-192.png" alt="סמל בית כנסת ומסלול">
-<h1>התקנת קישור לפתיחה בדפדפן</h1>
-<p>זה קיצור דרך למסך הבית שפותח את האתר בדפדפן Chrome, בנפרד מהאפליקציה המותקנת.</p>
-<ol class="steps"><li>פתח את תפריט Chrome באמצעות שלוש הנקודות <strong>⋮</strong>.</li><li>בחר <strong>„הוספה למסך הבית”</strong> ואז <strong>„יצירת קיצור דרך”</strong> אם האפשרות מופיעה.</li><li>אשר את ההוספה למסך הבית. מעכשיו לחיצה על הקיצור תפתח את האתר בדפדפן.</li></ol>
-<p>Chrome אינו מאפשר לאתר ליצור קיצור דרך בעצמו ללא אישורך. אם מוצגת רק אפשרות „התקנת אפליקציה”, הדפדפן עשוי להתקין אפליקציה במקום קיצור דרך.</p>
-<a class="primary cta" href="./">פתח עכשיו את מסלול הצדקה חי</a>
-</main></body></html>
+<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>Chrome shortcut · מסלול הצדקה חי</title>
+<meta name="theme-color" content="#123c45"><link rel="icon" href="icon-64.png?v=20261120-5"><link rel="stylesheet" href="styles.css?v=20261120-5"><script defer src="i18n.js?v=20261120-5"></script>
+<script>(function(){var url=new URL(location.href);if(url.searchParams.has('setup')){url.searchParams.delete('setup');history.replaceState({},'',url.pathname+url.search);}else{location.replace('./?from=browser-shortcut&v=20261120-5');}})();</script></head><body>
+<header class="topbar"><div class="brand"><img class="brand-icon" src="icon-64.png" alt=""> <span id="shortcutBrand">מסלול הצדקה חי</span></div><div class="topControls"><label for="languageSelect" id="languageLabel">שפה</label><select id="languageSelect" aria-label="Language"><option value="he">עברית</option><option value="en">English</option><option value="es">Español</option></select></div></header>
+<main class="shortcutPage"><img class="shortIcon" src="icon-192.png" alt=""><h1 id="shortcutTitle">הוספת קיצור דרך ל־Chrome</h1><p id="shortcutWhy">Chrome לא מספק לאתרים אפשרות להוסיף קיצור דרך ישירות. יש לאשר בתפריט הדפדפן.</p>
+<p class="shortcutNotice" id="shortcutNote">הקיצור צריך להיפתח בדפדפן Chrome, לא כאפליקציה עצמאית.</p>
+<ol class="steps"><li id="shortcutStep1">פתח את הדף הזה ב־Chrome והקש על ⋮.</li><li id="shortcutStep2">בחר „הוספה למסך הבית” ואז „יצירת קיצור דרך” אם מופיעה אפשרות כזאת.</li><li id="shortcutStep3">אשר. מעכשיו הסמל יפתח דף בדפדפן, לא אפליקציה עצמאית.</li></ol>
+<a class="primary cta" id="shortcutBack" href="./?v=20261120-5">חזרה למסלול חי</a>
+</main><script>function shortcutTranslate(){if(!window.MaslulI18n)return;const t=window.MaslulI18n.tr;const labels={'shortcutBrand':'title','shortcutTitle':'shortcutPageTitle','shortcutWhy':'shortcutWhy','shortcutNote':'openBrowserOnly','shortcutStep1':'shortcutStep1','shortcutStep2':'shortcutStep2','shortcutStep3':'shortcutStep3','shortcutBack':'shortcutBack'};for(let id in labels){let el=document.getElementById(id);if(el)el.textContent=t(labels[id]);}}window.addEventListener('maslul-languagechange',shortcutTranslate);window.addEventListener('DOMContentLoaded',()=>{setTimeout(shortcutTranslate,0)});</script></body></html>

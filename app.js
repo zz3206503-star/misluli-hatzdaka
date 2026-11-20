@@ -2,7 +2,11 @@
 const $=id=>document.getElementById(id);
 const data={places:[],meta:{}};
 const state={view:'home',gps:null,gpsAccuracy:null,gpsError:'',watch:null,date:'',nearFilter:'all',nearLimit:40,search:'',route:[],nearSorted:[],maps:{},deferredInstall:null,nearOpen:false,liveOpen:false};
-const fmt=new Intl.DateTimeFormat('he-IL',{weekday:'long',day:'numeric',month:'long'});
+const tr=(key,vars)=>window.MaslulI18n?window.MaslulI18n.tr(key,vars):key;
+const locale=()=>window.MaslulI18n?.get()||'he';
+const fullName=p=>locale()==='he'?(p.nameHe||p.name):(p.nameEn||p.name);
+const otherName=p=>locale()==='he'?(p.nameEn||p.name):(p.nameHe||p.name);
+const nameCard=p=>`<h3 dir="auto">${esc(fullName(p))}</h3><p class="translatedName" dir="auto">${esc(otherName(p))}</p>${p.isAddressOnly?`<p class="nameCaution">${esc(tr('addressOnly'))}</p>`:''}`;
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function nowDate(){return new Date()}
 function dateKey(d){const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0');return `${y}-${m}-${day}`;}
@@ -11,11 +15,11 @@ function defaultDate(){let d=nowDate();if(d.getHours()>=13){d.setDate(d.getDate(
 function getDayIndex(){return parseDate(state.date).getDay();}
 function mins(t){const [h,m]=t.split(':').map(Number);return h*60+m;}
 function stamp(m){return String(Math.floor(m/60)%24).padStart(2,'0')+':'+String(Math.floor(m%60)).padStart(2,'0');}
-function selectedDateText(){return fmt.format(parseDate(state.date));}
+function selectedDateText(){return new Intl.DateTimeFormat({he:'he-IL',en:'en-US',es:'es-ES'}[locale()],{weekday:'long',day:'numeric',month:'long'}).format(parseDate(state.date));}
 function km(a,b){let r=Math.PI/180,dlat=(b[0]-a[0])*r,dlon=(b[1]-a[1])*r;let h=Math.sin(dlat/2)**2+Math.cos(a[0]*r)*Math.cos(b[0]*r)*Math.sin(dlon/2)**2;return 12742*Math.atan2(Math.sqrt(h),Math.sqrt(1-h));}
 function precise(p){return p.sourceType==='maps'||(p.precision||'').includes('מיקום מתוך');}
 function dist(p,from=state.gps){if(!from||p.lat==null||p.lon==null)return null;return km(from,[p.lat,p.lon]);}
-function distText(d,approx=false){if(d==null)return 'מרחק לא ידוע';return (approx?'≈ ':'')+(d<1?`${Math.round(d*1000)} מטר`:`${d.toFixed(1)} ק״מ`);}
+function distText(d,approx=false){if(d==null)return tr('distUnknown');return (approx?'≈ ':'')+(d<1?tr('meters',{distance:Math.round(d*1000)}):tr('kilometers',{distance:d.toFixed(1)}));}
 function availableSlots(p,dt=state.date){const index=parseDate(dt).getDay();if(index===6)return[];let times=new Map();for(const e of p.schedule||[]){let eligible=false,tm=e.time;
  if(e.day==='all')eligible=true;
  else if(e.day==='sun')eligible=index===0;
@@ -29,44 +33,40 @@ function isMarked(p,t){try{return localStorage.getItem(`visited:${state.date}:${
 function toggleMarked(p,t){try{const k=`visited:${state.date}:${p.id}:${t}`;localStorage.setItem(k,isMarked(p,t)?'0':'1');}catch{}renderCurrent();}
 function toast(s){const t=$('toast');t.textContent=s;t.classList.add('visible');clearTimeout(toast.timer);toast.timer=setTimeout(()=>t.classList.remove('visible'),2900);}
 function openView(view){state.view=view;document.querySelectorAll('.view').forEach(el=>el.classList.toggle('active',el.id===view));$('topHome').style.visibility=view==='home'?'hidden':'visible';window.scrollTo({top:0,behavior:'instant'});if(view!=='home'){requestGPS();renderCurrent();}}
-function requestGPS(){if(!navigator.geolocation){state.gpsError='הדפדפן אינו תומך ב־GPS';gpsMessage();return;}
+function requestGPS(){if(!navigator.geolocation){state.gpsError=tr('gpsUnsupported');gpsMessage();return;}
  if(state.watch!==null){navigator.geolocation.clearWatch(state.watch);state.watch=null;}
- state.gpsError='ממתין לאישור מיקום';gpsMessage();
+ state.gpsError=tr('gpsWaiting');gpsMessage();
  state.watch=navigator.geolocation.watchPosition(pos=>{
   const old=state.gps;state.gps=[pos.coords.latitude,pos.coords.longitude];state.gpsAccuracy=Math.round(pos.coords.accuracy);state.gpsError='';gpsMessage();
   if(!old||km(old,state.gps)>.02)renderCurrent();
- },err=>{state.gpsError=err.code===1?'לא ניתנה הרשאת מיקום. אפשר לאשר אותה בהגדרות האתר.':err.code===2?'ה־GPS לא הצליח לקבל מיקום.':'לא התקבל מיקום בזמן. נסה שוב.';gpsMessage();renderCurrent();},{enableHighAccuracy:true,maximumAge:30000,timeout:16000});
+ },err=>{state.gpsError=err.code===1?tr('gpsDenied'):err.code===2?tr('gpsUnavailable'):tr('gpsTimeout');gpsMessage();renderCurrent();},{enableHighAccuracy:true,maximumAge:30000,timeout:16000});
 }
-function gpsMessage(){let msg=state.gps?`GPS פעיל • דיוק משוער ${state.gpsAccuracy??'?'} מטר • מיון לפי קרבה`:`${state.gpsError||'נא לאשר מיקום כדי לחשב קרבה'} • אפשר לפתוח ניווט גם בלי GPS`;
- $('gpsLine').textContent=msg;$('nearGpsLine').textContent=msg;$('gpsState').textContent=state.gps?'פעיל':'לא פעיל';}
+function gpsMessage(){let msg=state.gps?tr('gpsActive',{accuracy:state.gpsAccuracy??'?'}):`${state.gpsError||tr('gpsNoPermission')} • ${tr('gpsCanNavigate')}`;
+ $('gpsLine').textContent=msg;$('nearGpsLine').textContent=msg;$('gpsState').textContent=tr(state.gps?'active':'inactive');}
 function navUrl(p,service){let query=encodeURIComponent(p.address||p.name);
  if(service==='waze')return precise(p)&&p.lat!=null&&p.lon!=null?`https://www.waze.com/ul?ll=${p.lat}%2C${p.lon}&navigate=yes`:`https://www.waze.com/ul?q=${query}&navigate=yes`;
  return p.mapUrl&&/^https:\/\//.test(p.mapUrl)?p.mapUrl:`https://www.google.com/maps/search/?api=1&query=${query}`;}
 function actionHTML(p){return `<div class="actions"><a href="${esc(navUrl(p,'waze'))}" target="_blank" rel="noopener noreferrer">↗ Waze</a><a href="${esc(navUrl(p,'google'))}" target="_blank" rel="noopener noreferrer">◉ Google Maps</a></div>`;}
-function markedButtonsHTML(p,slots){return slots.map(({time})=>{let m=isMarked(p,time);return `<button class="slot${m?' active':''}" data-mark-place="${esc(p.id)}" data-mark-time="${time}" aria-pressed="${m}" title="${m?'ביטול סימון':'סמן שהיית במניין'}"><span>${time}</span><span class="mark">${m?'● הייתי':'○ סמן'}</span></button>`;}).join('');}
-function sourceHTML(p){return p.sourceType==='maps'?`<p class="sourceTag">מרשימת בתי הכנסת שהעלית מגוגל מפות</p>`:`<p class="sourceTag">שעות: ${esc(p.source||'חוברת שהעלית')}</p>`;}
+function markedButtonsHTML(p,slots){return slots.map(({time})=>{let m=isMarked(p,time);return `<button class="slot${m?' active':''}" data-mark-place="${esc(p.id)}" data-mark-time="${time}" aria-pressed="${m}" title="${esc(tr(m?'unmarkTitle':'markTitle'))}"><span>${time}</span><span class="mark">${esc(tr(m?'iWasThere':'markVisit'))}</span></button>`;}).join('');}
+function sourceHTML(p){return p.sourceType==='maps'?`<p class="sourceTag">${esc(tr('googleSource'))}</p>`:`<p class="sourceTag">${esc(tr('timesSource',{source:p.source||'CLICK613'}))}</p>`;}
 function sundayNoteHTML(p){
  if(getDayIndex()===0||!(p.schedule||[]).length)return '';
  const sun=availableSlots(p,'2026-11-22').map(x=>x.time);
  if(!sun.length)return '';
  const regular=availableSlots(p,state.date).map(x=>x.time);
  if(sun.join(',')===regular.join(','))return '';
- return `<p class="extraTimes"><strong>הערת יום ראשון:</strong> ${esc(sun.join(' · '))}. לבחירת המניינים ולסימונם יש לבחור תאריך של יום ראשון.</p>`;
+ return `<p class="extraTimes"><strong>${esc(tr('sundayNote'))}</strong> ${esc(sun.join(' · '))}. ${esc(tr('sunInstruction'))}</p>`;
 }
-function nearCard(p){const slots=availableSlots(p),d=dist(p),approx=!precise(p);const bud=approx?'<span class="miniBadge approx">מיקום משוער לפי אזור</span>':'<span class="miniBadge">מיקום מהמפה שלך</span>';
- return `<article class="placeCard"><div class="headRow"><div><h3>${esc(p.name)}</h3><p>${esc(p.address||'שם המקום מרשימת גוגל מפות')}</p>${bud}</div><span class="routeDistance">${esc(distText(d,approx))}</span></div>
- ${slots.length?`<span class="minorLabel">שעות שחרית – ${esc(selectedDateText())}</span><div class="slotWrap">${markedButtonsHTML(p,slots)}</div>`:'<p class="extraTimes">אין שעות שחרית בקבצים שהועלו עבור המקום הזה</p>'}
+function nearCard(p){const slots=availableSlots(p),d=dist(p),approx=!precise(p);const bud=`<span class="miniBadge${approx?' approx':''}">${esc(tr(approx?'approxPlace':'exactPlace'))}</span>`;
+ return `<article class="placeCard"><div class="headRow"><div>${nameCard(p)}<p>${esc(p.address||tr('addressNotKnown'))}</p>${bud}</div><span class="routeDistance">${esc(distText(d,approx))}</span></div>
+ ${slots.length?`<span class="minorLabel">${esc(tr('prayerTimesFor',{date:selectedDateText()}))}</span><div class="slotWrap">${markedButtonsHTML(p,slots)}</div>`:`<p class="extraTimes">${esc(tr('noTimes'))}</p>`}
  ${sundayNoteHTML(p)}${actionHTML(p)}${sourceHTML(p)}</article>`;}
 function renderNearby(){const search=state.search.trim().toLocaleLowerCase(),filter=state.nearFilter;
- let items=data.places.filter(p=>(!search||(p.name+' '+(p.address||'')+' '+(p.area||'')).toLocaleLowerCase().includes(search))&&(filter==='all'||(filter==='with'?!!p.schedule?.length:!p.schedule?.length)));
- if(state.gps)items.sort((a,b)=>{
-  const pa=precise(a)?0:1,pb=precise(b)?0:1;
-  // A precise location is preferred to an inaccurate area centroid at similar distances.
-  let da=dist(a)??1e7,db=dist(b)??1e7;
-  return (da+(pa?8:0))-(db+(pb?8:0));});
+ let items=data.places.filter(p=>(!search||((p.name||'')+' '+(p.nameHe||'')+' '+(p.nameEn||'')+' '+(p.address||'')+' '+(p.area||'')).toLocaleLowerCase().includes(search))&&(filter==='all'||(filter==='with'?!!p.schedule?.length:!p.schedule?.length)));
+ if(state.gps)items.sort((a,b)=>{const pa=precise(a)?0:1,pb=precise(b)?0:1;let da=dist(a)??1e7,db=dist(b)??1e7;return (da+(pa?8:0))-(db+(pb?8:0));});
  state.nearSorted=items;
- $('nearSummary').textContent=`${items.length} מקומות ברשימה • ${data.meta.googleMapsRows} נקודות מרשימת גוגל מפות • מיקומים משוערים מסומנים בנפרד`;
- $('nearItems').innerHTML=items.slice(0,state.nearLimit).map(nearCard).join('')||'<div class="empty">לא נמצאו בתי כנסת מתאימים לחיפוש.</div>';
+ $('nearSummary').textContent=tr('nearSummary',{count:items.length,google:data.meta.googleMapsRows??0});
+ $('nearItems').innerHTML=items.slice(0,state.nearLimit).map(nearCard).join('')||`<div class="empty">${esc(tr('noneFound'))}</div>`;
  $('morePlaces').classList.toggle('hidden',state.nearLimit>=items.length);
  if(state.nearOpen)drawMap('nearMap',items.filter(precise),false);
 }
@@ -75,7 +75,7 @@ function candidateList(){let rows=[];const today=dateKey(nowDate())===state.date
  return rows;
 }
 function buildRoute(){let all=candidateList();$('nearMatches').textContent=all.length;
- if(!state.gps){all.sort((a,b)=>a.start-b.start||a.p.name.localeCompare(b.p.name));state.route=all.slice(0,14).map((e,i)=>({...e,order:i+1,category:'מתחיל בשעה המצוינת',arrival:e.start,score:0}));return;}
+ if(!state.gps){all.sort((a,b)=>a.start-b.start||a.p.name.localeCompare(b.p.name));state.route=all.slice(0,14).map((e,i)=>({...e,order:i+1,category:tr('startAt'),arrival:e.start,score:0}));return;}
  const selected=[],used=new Set();let position=state.gps;const today=dateKey(nowDate())===state.date;
  let clock=today?nowDate().getHours()*60+nowDate().getMinutes():5*60+50;
  for(let ii=0;ii<10;ii++){
@@ -87,8 +87,8 @@ function buildRoute(){let all=candidateList();$('nearMatches').textContent=all.l
    const eta=e.approx?6:Math.ceil(journey/28*60+2);
    const reach=clock+eta;if(reach>e.start+35)continue;
    let arrive,category;
-   if(reach<=e.start+10){arrive=Math.max(reach,e.start+7);category='חלון מועדף: 5–10 דק׳ אחרי ההתחלה';}
-   else {arrive=Math.max(reach,e.start+28);category='חלון נוסף: 25–35 דק׳ אחרי ההתחלה';}
+   if(reach<=e.start+10){arrive=Math.max(reach,e.start+7);category=tr('preferredWindow');}
+   else {arrive=Math.max(reach,e.start+28);category=tr('secondaryWindow');}
    let wait=Math.max(0,arrive-reach),score=eta*2.7+wait*.26+(e.approx?28:0)+(arrive>e.start+10?12:0)+(e.visited?18:0);
    choices.push({...e,score,arrival:arrive,eta,category});
   }
@@ -99,27 +99,27 @@ function buildRoute(){let all=candidateList();$('nearMatches').textContent=all.l
  }
  if(selected.length===0){all.sort((a,b)=>{
    let da=a.d??1e7,db=b.d??1e7;return da-db||a.start-b.start;});
-   state.route=all.slice(0,12).map((e,i)=>({...e,order:i+1,arrival:e.start,category:'הצעה לקרבה – אין חלון הגעה מאומת'}));
+   state.route=all.slice(0,12).map((e,i)=>({...e,order:i+1,arrival:e.start,category:tr('closeSuggestion')}));
  }else state.route=selected;
 }
 function routeCard(e){const p=e.p,slots=availableSlots(p),time=e.t,approx=e.approx,d=e.d;
- const dayNote=slots.length>1?`<p class="extraTimes">שאר המניינים באותו בית כנסת – ניתן לסמן כל שעה בנפרד:</p>`:'';
- return `<article class="placeCard"><div class="headRow"><div><h3>${esc(p.name)}</h3><p>${esc(p.address||p.area||'')}</p><p class="routeNote"><strong>המניין שנבחר: ${time}</strong> • הגעה מתוכננת בקירוב ${stamp(e.arrival)}<br>${esc(e.category)}${approx?' • מיקום משוער':''}</p></div><span class="stopNum">${e.order}</span></div>
- <p class="estimated">${state.gps?`מרחק משוער ${esc(distText(d,approx))}`:'GPS עדיין לא פעיל'}</p>
+ const dayNote=slots.length>1?`<p class="extraTimes">${esc(tr('otherMinyanim'))}</p>`:'';
+ return `<article class="placeCard"><div class="headRow"><div>${nameCard(p)}<p>${esc(p.address||p.area||'')}</p><p class="routeNote"><strong>${esc(tr('chosenMinyan',{time}))}</strong> • ${esc(tr('arrivalApprox',{time:stamp(e.arrival)}))}<br>${esc(e.category)}${approx?` • ${esc(tr('approxShort'))}`:''}</p></div><span class="stopNum">${e.order}</span></div>
+ <p class="estimated">${state.gps?esc(tr('distanceApprox',{distance:distText(d,approx)})):esc(tr('gpsNotYet'))}</p>
  ${dayNote}<div class="slotWrap">${markedButtonsHTML(p,slots)}</div>${sundayNoteHTML(p)}${actionHTML(p)}${sourceHTML(p)}</article>`;}
 function renderLive(){buildRoute();$('liveCount').textContent=state.route.length;
- $('routeItems').innerHTML=state.route.map(routeCard).join('')||'<div class="empty">לא נמצאו מנייני שחרית נוספים בחלון הזמן שבחרת. אפשר לשנות תאריך למעלה. בשבת אין רשימת שחרית בחוברות האלה.</div>';
- if(!state.gps)$('routeItems').insertAdjacentHTML('afterbegin','<div class="notice">ללא GPS מוצגת רשימה לפי השעה בלבד, ולא מסלול נסיעה מחושב. אשר מיקום כדי למיין לפי קרבה.</div>');
+ $('routeItems').innerHTML=state.route.map(routeCard).join('')||`<div class="empty">${esc(tr('noneUpcoming'))}</div>`;
+ if(!state.gps)$('routeItems').insertAdjacentHTML('afterbegin',`<div class="notice">${esc(tr('gpsFallback'))}</div>`);
  if(state.liveOpen)drawMap('liveMap',state.route.map(e=>e.p),true);
 }
 function renderCurrent(){if(state.view==='live')renderLive();else if(state.view==='nearby')renderNearby();}
-function initMap(id){if(state.maps[id])return state.maps[id];if(!window.L){$(id+'Hint').textContent='המפה לא נטענה. הרשימה וקישורי הניווט ממשיכים לפעול.';return null;}
+function initMap(id){if(state.maps[id])return state.maps[id];if(!window.L){$(id+'Hint').textContent=tr('mapUnavailable');return null;}
  let m=L.map(id,{scrollWheelZoom:false});L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'}).addTo(m);state.maps[id]=m;return m;
 }
 function drawMap(id,places,route){let map=initMap(id);if(!map)return; if(map._customMarkers){map._customMarkers.forEach(x=>map.removeLayer(x));}
- let created=[],line=[],bounds=[];if(state.gps){let user=L.circleMarker(state.gps,{radius:9,color:'#154c68',fillColor:'#24d4c1',fillOpacity:1,weight:3}).bindPopup('המיקום שלי לפי GPS').addTo(map);created.push(user);bounds.push(state.gps);line.push(state.gps);}
+ let created=[],line=[],bounds=[];if(state.gps){let user=L.circleMarker(state.gps,{radius:9,color:'#154c68',fillColor:'#24d4c1',fillOpacity:1,weight:3}).bindPopup(tr('myGps')).addTo(map);created.push(user);bounds.push(state.gps);line.push(state.gps);}
  places.forEach((p,i)=>{if(p.lat==null||p.lon==null)return;if(!route&&!precise(p))return;
- let ll=[p.lat,p.lon];let marker=L.circleMarker(ll,{radius:route?11:5,color:route?'#034b6d':'#156c6d',fillColor:route?'#0c9cab':'#3fbbb5',fillOpacity:.85,weight:1}).bindPopup(`<strong>${esc(p.name)}</strong><br>${esc(p.address||'')}<br><a href="${esc(navUrl(p,'google'))}" target="_blank">פתח בניווט</a>`).addTo(map);created.push(marker);bounds.push(ll);if(route)line.push(ll);});
+ let ll=[p.lat,p.lon];let marker=L.circleMarker(ll,{radius:route?11:5,color:route?'#034b6d':'#156c6d',fillColor:route?'#0c9cab':'#3fbbb5',fillOpacity:.85,weight:1}).bindPopup(`<strong>${esc(fullName(p))} / ${esc(otherName(p))}</strong><br>${esc(p.address||'')}<br><a href="${esc(navUrl(p,'google'))}" target="_blank">${esc(tr('navigate'))}</a>`).addTo(map);created.push(marker);bounds.push(ll);if(route)line.push(ll);});
  if(route&&line.length>=2)created.push(L.polyline(line,{color:'#19878e',weight:3,dashArray:'6,8'}).addTo(map));map._customMarkers=created;
  if(bounds.length>=2)map.fitBounds(bounds,{padding:[20,20],maxZoom:14});else if(bounds.length===1)map.setView(bounds[0],13);else map.setView([40.085,-74.21],10);
  setTimeout(()=>map.invalidateSize(),100);
@@ -133,25 +133,16 @@ function bind(){ $('topHome').addEventListener('click',()=>openView('home'));$('
  document.querySelectorAll('.pill').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.pill').forEach(e=>e.classList.remove('active'));b.classList.add('active');state.nearFilter=b.dataset.f;state.nearLimit=40;renderNearby();}));
  $('morePlaces').addEventListener('click',()=>{state.nearLimit+=50;renderNearby();});
  document.body.addEventListener('click',e=>{let b=e.target.closest('[data-mark-place]');if(!b)return;let p=data.places.find(x=>x.id===b.dataset.markPlace);if(p)toggleMarked(p,b.dataset.markTime);});
- $('mapToggle').addEventListener('click',()=>{state.liveOpen=!state.liveOpen;$('liveMapWrap').classList.toggle('hidden',!state.liveOpen);$('mapToggle').textContent=state.liveOpen?'הסתר מפה':'הצג מפה';if(state.liveOpen)renderLive();});
- $('nearMapToggle').addEventListener('click',()=>{state.nearOpen=!state.nearOpen;$('nearMapWrap').classList.toggle('hidden',!state.nearOpen);$('nearMapToggle').textContent=state.nearOpen?'הסתר מפה':'הצג מפה';if(state.nearOpen)renderNearby();});
- window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();state.deferredInstall=e;});
- window.addEventListener('appinstalled',()=>{state.deferredInstall=null;toast('האפליקציה הותקנה בהצלחה');});
- $('installApp').addEventListener('click',async()=>{if(window.matchMedia('(display-mode: standalone)').matches){toast('האפליקציה כבר מותקנת.');return;}
-  if(state.deferredInstall){let p=state.deferredInstall;state.deferredInstall=null;await p.prompt();try{let result=await p.userChoice;toast(result.outcome==='accepted'?'בקשת ההתקנה אושרה':'ההתקנה לא בוצעה');}catch{}return;}
-  $('installHelpText').textContent=/Android/i.test(navigator.userAgent)?'בטאבלט סמסונג: לחץ על ⋮ בתפריט Chrome (למעלה), ובחר „התקנת אפליקציה”. אם אין אפשרות כזאת, בחר „הוספה למסך הבית”, אשר את ההתקנה, ונסה שוב אחרי רענון הדף. לא ניתן להפעיל את חלון ההתקנה אוטומטית בכל גרסאות Chrome.':'פתח בדפדפן הראשי ובתפריט השיתוף בחר „הוספה למסך הבית”.';$('installHelp').classList.remove('hidden');
- });
- $('closeInstallHelp').addEventListener('click',()=>{$('installHelp').classList.add('hidden');});
- $('browserShortcut').addEventListener('click',()=>{
-  // Web pages cannot silently create a home-screen shortcut; guide the user through Chrome's UI.
-  // A manifest-free intermediary is used so Chrome can create a browser shortcut rather than installing the PWA.
-  try{sessionStorage.setItem('maslul-browser-shortcut-setup','1');}catch{}
-  window.location.assign('./browser-link.html');
- });
+ $('mapToggle').addEventListener('click',()=>{state.liveOpen=!state.liveOpen;$('liveMapWrap').classList.toggle('hidden',!state.liveOpen);$('mapToggle').textContent=tr(state.liveOpen?'hideMap':'showMap');if(state.liveOpen)renderLive();});
+ window.addEventListener('maslul-languagechange',()=>{
+  $('mapToggle').textContent=tr(state.liveOpen?'hideMap':'showMap');$('nearMapToggle').textContent=tr(state.nearOpen?'hideMap':'showMap');
+  $('countSmall').textContent=tr('fromMapCount',{count:data.meta.googleMapsRows||0});gpsMessage();renderCurrent();});
+ $('nearMapToggle').addEventListener('click',()=>{state.nearOpen=!state.nearOpen;$('nearMapWrap').classList.toggle('hidden',!state.nearOpen);$('nearMapToggle').textContent=tr(state.nearOpen?'hideMap':'showMap');if(state.nearOpen)renderNearby();});
+
 }
 async function load(){try{let r=await fetch('./places.json',{cache:'no-store'});if(!r.ok)throw new Error(`HTTP ${r.status}`);let json=await r.json();data.places=json.places;data.meta=json.meta;
- $('countSmall').textContent=`(${data.meta.googleMapsRows} מהמפה)`;$('dateSelect').value=state.date;
- }catch(err){$('countSmall').textContent='';$('gpsLine').textContent='טעינת הנתונים נכשלה: '+err.message;$('nearItems').textContent='אי אפשר לטעון את בתי הכנסת. ודא שכל הקבצים הועלו יחד.';toast('קובץ הנתונים חסר או לא נטען');}}
+ $('countSmall').textContent=tr('fromMapCount',{count:data.meta.googleMapsRows});$('dateSelect').value=state.date;
+ }catch(err){$('countSmall').textContent='';$('gpsLine').textContent=tr('loadFailed',{reason:err.message});$('nearItems').textContent=tr('dataMissing');toast(tr('missingFileToast'));}}
 
 async function setupAutomaticUpdates(){
  if(!('serviceWorker' in navigator)||location.protocol!=='https:')return;
@@ -172,7 +163,7 @@ async function setupAutomaticUpdates(){
   window.addEventListener('focus',check);
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)check();});
   setInterval(check,5*60*1000);
- }catch(e){const status=$('versionStatus');if(status)status.textContent='עדכונים אוטומטיים אינם זמינים בדפדפן הזה. אפשר לרענן את הדף.';}
+ }catch(e){const status=$('versionStatus');if(status)status.textContent=tr('updatesNotAvailable');}
 }
 
 async function init(){state.date=defaultDate();bind();await load();gpsMessage();setupAutomaticUpdates();
