@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#123c45">
 <meta name="description" content="מסלול הצדקה חי – זמני שחרית ממקורות המשתמש ובתי כנסת קרובים מהמפה האישית">
-<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-64.png" type="image/png"><link rel="apple-touch-icon" href="icon-192.png">
 <title>מסלול הצדקה חי</title>
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyo5KtJcH5hQLI=" crossorigin="">
@@ -11,12 +11,12 @@
 <script defer src="app.js"></script>
 </head>
 <body>
-<header class="topbar"><div class="brand" id="brandTitle"><span class="brand-icon">✡</span><span>מסלול הצדקה חי</span></div><button id="topHome" class="ghost small" aria-label="חזרה למסך הראשי">⌂ מסך ראשי</button></header>
+<header class="topbar"><div class="brand" id="brandTitle"><img class="brand-icon" src="icon-64.png" alt="סמל בית כנסת ומסלול"><span>מסלול הצדקה חי</span></div><button id="topHome" class="ghost small" aria-label="חזרה למסך הראשי">⌂ מסך ראשי</button></header>
 <main>
 <section id="home" class="view active">
- <div class="hero"><div class="hero-mark">✡</div><p class="eyebrow">שחרית • לפי המיקום הנוכחי</p><h1>מסלול הצדקה חי</h1><p>מניינים קרובים עם השעות שלהם, בלי לבחור עיר</p></div>
+ <div class="hero"><img class="hero-mark" src="icon-192.png" alt="בית כנסת עם מסלול"><p class="eyebrow">שחרית • לפי המיקום הנוכחי</p><h1>מסלול הצדקה חי</h1><p>מניינים קרובים עם השעות שלהם, בלי לבחור עיר</p></div>
  <button id="goLive" class="primary big"><span class="btn-icon">➤</span><span><strong>מסלול חי</strong><small>מנייני שחרית לפי GPS והשעה</small></span></button>
- <div class="homeActions"><button id="installApp" class="outline"><span>⬇</span><span>התקנת אפליקציה</span></button><button id="browserShortcut" class="outline"><span>↗</span><span>פתח בדפדפן</span></button></div>
+ <div class="homeActions"><button id="installApp" class="outline"><span>⬇</span><span>התקנת אפליקציה</span></button><button id="browserShortcut" class="outline"><span>↗</span><span>התקנת קישור לפתיחה בדפדפן</span></button></div>
  <button id="goNearby" class="secondary smallWide">⌾ בתי כנסת קרובים <span class="muted" id="countSmall"></span></button>
  <p class="homeFoot">הזמנים מתוך החוברות שסיפקת בלבד. אין תוספת זמנים ממקורות אחרים.</p>
 </section>
@@ -40,4 +40,5 @@
 </main>
 <div id="toast" role="status" aria-live="polite"></div>
 <div id="installHelp" class="dialogOverlay hidden"><div class="dialog" role="dialog" aria-modal="true" aria-label="התקנת אפליקציה"><h3>התקנת האפליקציה</h3><p id="installHelpText">פתח את האתר ב־Chrome, לחץ על שלוש הנקודות ובחר „התקנת אפליקציה” או „הוספה למסך הבית”.</p><button id="closeInstallHelp" class="primary">סגור</button></div></div>
+<p class="updateStatus" id="versionStatus" aria-live="polite">עדכוני האפליקציה נבדקים אוטומטית כשיש חיבור לאינטרנט.</p>
 </body></html>

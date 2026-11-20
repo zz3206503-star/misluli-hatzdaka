@@ -136,23 +136,46 @@ function bind(){ $('topHome').addEventListener('click',()=>openView('home'));$('
  $('mapToggle').addEventListener('click',()=>{state.liveOpen=!state.liveOpen;$('liveMapWrap').classList.toggle('hidden',!state.liveOpen);$('mapToggle').textContent=state.liveOpen?'הסתר מפה':'הצג מפה';if(state.liveOpen)renderLive();});
  $('nearMapToggle').addEventListener('click',()=>{state.nearOpen=!state.nearOpen;$('nearMapWrap').classList.toggle('hidden',!state.nearOpen);$('nearMapToggle').textContent=state.nearOpen?'הסתר מפה':'הצג מפה';if(state.nearOpen)renderNearby();});
  window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();state.deferredInstall=e;});
+ window.addEventListener('appinstalled',()=>{state.deferredInstall=null;toast('האפליקציה הותקנה בהצלחה');});
  $('installApp').addEventListener('click',async()=>{if(window.matchMedia('(display-mode: standalone)').matches){toast('האפליקציה כבר מותקנת.');return;}
   if(state.deferredInstall){let p=state.deferredInstall;state.deferredInstall=null;await p.prompt();try{let result=await p.userChoice;toast(result.outcome==='accepted'?'בקשת ההתקנה אושרה':'ההתקנה לא בוצעה');}catch{}return;}
-  $('installHelpText').textContent=/Android/i.test(navigator.userAgent)?'בטאבלט סמסונג: פתח ב־Chrome, לחץ על שלוש הנקודות ובחר „התקנת אפליקציה” או „הוספה למסך הבית”.':'פתח בדפדפן הראשי ובתפריט השיתוף בחר „הוספה למסך הבית”.';$('installHelp').classList.remove('hidden');
+  $('installHelpText').textContent=/Android/i.test(navigator.userAgent)?'בטאבלט סמסונג: לחץ על ⋮ בתפריט Chrome (למעלה), ובחר „התקנת אפליקציה”. אם אין אפשרות כזאת, בחר „הוספה למסך הבית”, אשר את ההתקנה, ונסה שוב אחרי רענון הדף. לא ניתן להפעיל את חלון ההתקנה אוטומטית בכל גרסאות Chrome.':'פתח בדפדפן הראשי ובתפריט השיתוף בחר „הוספה למסך הבית”.';$('installHelp').classList.remove('hidden');
  });
  $('closeInstallHelp').addEventListener('click',()=>{$('installHelp').classList.add('hidden');});
- $('browserShortcut').addEventListener('click',async()=>{let url=new URL('./',location.href).href;
-  // A real user click may open the page in a normal browser tab; if pop-ups are blocked, copy the link.
-  let opened=null;try{opened=window.open(url,'_blank');}catch{}
-  if(opened){toast('נפתח קישור האתר בדפדפן.');return;}
-  try{await navigator.clipboard.writeText(url);toast('קישור הדפדפן הועתק. אפשר לפתוח אותו או לשמור כסימנייה.');}
-  catch{if(navigator.share)try{await navigator.share({title:'מסלול הצדקה חי',url});return;}catch{}prompt('העתק קישור לאתר:',url);}
+ $('browserShortcut').addEventListener('click',()=>{
+  // Web pages cannot silently create a home-screen shortcut; guide the user through Chrome's UI.
+  // A manifest-free intermediary is used so Chrome can create a browser shortcut rather than installing the PWA.
+  try{sessionStorage.setItem('maslul-browser-shortcut-setup','1');}catch{}
+  window.location.assign('./browser-link.html');
  });
 }
-async function load(){try{let r=await fetch('./data/places.json',{cache:'no-cache'});if(!r.ok)throw new Error(`HTTP ${r.status}`);let json=await r.json();data.places=json.places;data.meta=json.meta;
+async function load(){try{let r=await fetch('./places.json',{cache:'no-store'});if(!r.ok)throw new Error(`HTTP ${r.status}`);let json=await r.json();data.places=json.places;data.meta=json.meta;
  $('countSmall').textContent=`(${data.meta.googleMapsRows} מהמפה)`;$('dateSelect').value=state.date;
  }catch(err){$('countSmall').textContent='';$('gpsLine').textContent='טעינת הנתונים נכשלה: '+err.message;$('nearItems').textContent='אי אפשר לטעון את בתי הכנסת. ודא שכל הקבצים הועלו יחד.';toast('קובץ הנתונים חסר או לא נטען');}}
-async function init(){state.date=defaultDate();bind();await load();gpsMessage();if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('./sw.js').catch(()=>{});
+
+async function setupAutomaticUpdates(){
+ if(!('serviceWorker' in navigator)||location.protocol!=='https:')return;
+ // First installation should not interrupt onboarding. Subsequent deployed updates reload automatically.
+ let previousController=!!navigator.serviceWorker.controller;
+ let reloading=false;
+ navigator.serviceWorker.addEventListener('controllerchange',()=>{
+  if(reloading)return;
+  if(!previousController){previousController=true;return;}
+  reloading=true;
+  window.location.reload();
+ });
+ try{
+  const reg=await navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'});
+  const check=()=>{if(navigator.onLine!==false)reg.update().catch(()=>{});};
+  check();
+  window.addEventListener('online',check);
+  window.addEventListener('focus',check);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)check();});
+  setInterval(check,5*60*1000);
+ }catch(e){const status=$('versionStatus');if(status)status.textContent='עדכונים אוטומטיים אינם זמינים בדפדפן הזה. אפשר לרענן את הדף.';}
+}
+
+async function init(){state.date=defaultDate();bind();await load();gpsMessage();setupAutomaticUpdates();
  try{const params=new URLSearchParams(location.search);if(params.get('screen')==='nearby')openView('nearby');else if(params.get('screen')==='live')openView('live');}catch{}
 }
 window.__routeAppTest={availableSlots,dist,precise,dateKey,parseDate,from:()=>({data,state}),defaultDate};
