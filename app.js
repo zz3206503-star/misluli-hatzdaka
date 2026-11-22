@@ -191,7 +191,7 @@ function bind(){
  $('nearMapToggle').addEventListener('click',()=>{state.nearOpen=!state.nearOpen;$('nearMapWrap').classList.toggle('hidden',!state.nearOpen);$('nearMapToggle').textContent=tr(state.nearOpen?'hideMap':'showMap');if(state.nearOpen)renderNearby();});
 
 }
-async function load(){try{let r=await fetch('./data/places.json',{cache:'no-store'});if(!r.ok)throw new Error(`HTTP ${r.status}`);let json=await r.json();data.places=json.places;data.meta=json.meta;data.shapes=json.cityShapes;data.centers={...json.clickCenters,...Object.fromEntries(data.shapes.map(s=>[s.name,s.center]))};
+async function load(){try{let r=await fetch('./places.json',{cache:'no-store'});if(!r.ok)throw new Error(`HTTP ${r.status}`);let json=await r.json();data.places=json.places;data.meta=json.meta;data.shapes=json.cityShapes;data.centers={...json.clickCenters,...Object.fromEntries(data.shapes.map(s=>[s.name,s.center]))};
  const cities=[...new Set(data.places.flatMap(p=>p.localities))].sort();
  for(const city of cities)$('areaSelect').add(new Option(city,city));
  renderCurrent();
