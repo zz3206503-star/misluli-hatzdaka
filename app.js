@@ -7,7 +7,13 @@ const tr=(key,vars)=>window.MaslulI18n?window.MaslulI18n.tr(key,vars):key;
 const locale=()=>window.MaslulI18n?.get()||'he';
 const fullName=p=>locale()==='he'?(p.nameHe||p.name):(p.nameEn||p.name);
 const otherName=p=>locale()==='he'?(p.nameEn||p.name):(p.nameHe||p.name);
-const nameCard=p=>`<h3 dir="auto">${esc(fullName(p))}</h3><p class="translatedName" dir="auto">${esc(otherName(p))}</p>${p.isAddressOnly?`<p class="nameCaution">${esc(tr('addressOnly'))}</p>`:''}`;
+const factoryTag=p=>p.factory?`<span class="factoryTag">${esc(tr("factoryLabel"))}</span>`:"";
+function visitedPlace(p){try{return localStorage.getItem('visited-place:'+p.id)==='1';}catch{return false;}}
+function placeButton(p){
+ const marked=visitedPlace(p), labels={he:['סמן שביקרתי בבית הכנסת','ביקרתי בבית הכנסת'],en:['Mark synagogue as visited','Visited synagogue'],es:['Marcar sinagoga visitada','Sinagoga visitada']};
+ return `<button class="ghost slim" data-visit-place="${esc(p.id)}" aria-pressed="${marked}">${marked?'✓ ':''}${esc(labels[locale()][Number(marked)])}</button>`;
+}
+const nameCard=p=>`${factoryTag(p)}<h3 dir="auto">${esc(fullName(p))}</h3><p class="translatedName" dir="auto">${esc(otherName(p)===fullName(p)?'':otherName(p))}</p>${p.isAddressOnly?`<p class="nameCaution">${esc(tr('addressOnly'))}</p>`:''}`;
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function nowDate(){return new Date()}
 function dateKey(d){const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0');return `${y}-${m}-${day}`;}
@@ -54,10 +60,17 @@ function addressChoices(p){
  return `<div><span>${esc(tr(i?'archiveAddress':'photoAddress'))} · <bdi>${esc(o.address)}</bdi></span><div class="actions"><a target="_blank" rel="noopener noreferrer" href="https://www.waze.com/ul?q=${q}&amp;navigate=yes">Waze</a><a target="_blank" rel="noopener noreferrer" href="https://www.google.com/maps/search/?api=1&amp;query=${q}">Google Maps</a></div></div>`;
  }).join('')}</div>`;
 }
-function actionHTML(p){if(p.addressOptions)return addressChoices(p);return `<div class="actions"><a href="${esc(navUrl(p,'waze'))}" target="_blank" rel="noopener noreferrer">↗ Waze</a><a href="${esc(navUrl(p,'google'))}" target="_blank" rel="noopener noreferrer">◉ Google Maps</a></div>`;}
-function markedButtonsHTML(p,slots){return slots.map(({time})=>{let m=isMarked(p,time);return `<button class="slot${m?' active':''}" data-mark-place="${esc(p.id)}" data-mark-time="${time}" aria-pressed="${m}" title="${esc(tr(m?'unmarkTitle':'markTitle'))}"><span>${time}</span><span class="mark">${esc(tr(m?'iWasThere':'markVisit'))}</span></button>`;}).join('');}
-function sourceHTML(p){if(p.scheduleSource?.includes('צילום GoDavening'))return `<p class="sourceTag">${esc(tr('photoTiming'))}</p>`;return p.sourceType==='maps'?`<p class="sourceTag">${esc(tr('googleSource'))}</p>`:`<p class="sourceTag">${esc(tr('timesSource',{source:p.source||'CLICK613'}))}</p>`;}
+function actionHTML(p){if(p.addressOptions)return placeButton(p)+addressChoices(p);return placeButton(p)+`<div class="actions"><a href="${esc(navUrl(p,'waze'))}" target="_blank" rel="noopener noreferrer">↗ Waze</a><a href="${esc(navUrl(p,'google'))}" target="_blank" rel="noopener noreferrer">◉ Google Maps</a></div>`;}
+function markedButtonsHTML(p,slots){return slots.map(({time})=>{let m=isMarked(p,time);return `<button class="slot${m?' active':''}" data-mark-place="${esc(p.id)}" data-mark-time="${time}" aria-pressed="${m}" title="${esc(tr(m?'unmarkTitle':'markTitle'))}"><span>${time}</span>${p.factory?`<span class="factorySlot">${esc(tr("factoryLabel"))}</span>`:''}<span class="mark">${esc(tr(m?'iWasThere':'markVisit'))}</span></button>`;}).join('');}
+function sourceHTML(p){if(p.bookletPage)return `<p class="sourceTag">${esc(p.scheduleSource)} · ${p.bookletPage}</p>`;if((p.scheduleSource||p.source||'').includes('GoDavening'))return `<p class="sourceTag">${esc(tr('photoTiming'))}</p>`;return p.sourceType==='maps'?`<p class="sourceTag">${esc(tr('googleSource'))}</p>`:`<p class="sourceTag">${esc(tr('timesSource',{source:p.source||'CLICK613'}))}</p>`;}
 const weekdayLabels=Object.fromEntries(['he','en','es'].map(lang=>{const fmt=new Intl.DateTimeFormat(lang,{weekday:'long'});return [lang,[1,2,3,4,5,7].map(d=>fmt.format(new Date(2024,0,d,12)))];}));
+function factoryInfo(p){
+ if(!p.factory)return '';
+ const lines=Object.entries(p.factory.ranges).flatMap(([day,ranges])=>ranges.map(([start,end,minutes])=>
+  `<div>${esc(tr({all:'factoryDays',wk:'weekdays',sun:'factorySunday'}[day]))} · <bdi>${start}–${end}</bdi> · ${esc(tr('factoryInterval',{minutes}))}</div>`));
+ return `<aside class="factoryInfo"><strong>${esc(tr('factoryLabel'))}</strong> · CLICK613 · Minyan Factories · 256 / 2${lines.join('')}</aside>`;
+}
+function hasSchedule(p){return Boolean(p.schedule?.length || p.scheduleNote || p.bookletNotes);}
 function weekHTML(p){
  const days=['2024-01-01','2024-01-02','2024-01-03','2024-01-04','2024-01-05','2024-01-07'];
  const groups=new Map(),rows=[];
@@ -72,11 +85,11 @@ function weekHTML(p){
  const regular=[...groups.values()];
  if(regular.length===1)regular[0].labels=[tr('weekdays')];
  if(p.schedule?.some(e=>e.day==='sat'))rows.push({labels:[new Intl.DateTimeFormat(locale(),{weekday:'long'}).format(parseDate('2024-01-06'))],slots:availableSlots(p,'2024-01-06')});
- return [...regular,...rows].map(row=>`<div class="hoursRow"><strong>${esc(row.labels.join(' · '))}</strong> ${p.scheduleNote?esc(tr('sunrisePrayer')):''}${row.slots.length?`<div class="slotWrap">${markedButtonsHTML(p,row.slots)}</div>`:`<span>${esc(tr('noPublished'))}</span>`}</div>`).join('');
+ return factoryInfo(p)+(p.bookletNotes?`<p class="hoursRow" dir="rtl">${esc(p.bookletNotes)}</p>`:'')+[...regular,...rows].map(row=>`<div class="hoursRow"><strong>${esc(row.labels.join(' · '))}</strong> ${factoryTag(p)} ${p.scheduleNote?esc(tr('sunrisePrayer')):''}${row.slots.length?`<div class="slotWrap">${markedButtonsHTML(p,row.slots)}</div>`:`<span>${esc(tr('noPublished'))}</span>`}</div>`).join('');
 }
-function nearCard(p){const slots=availableSlots(p),d=dist(p,cityOrigin(selectedCity())),approx=!precise(p);const bud=`<span class="miniBadge${approx?' approx':''}">${esc(tr(approx?'approxPlace':p.addressLocated?'locatedAddress':'exactPlace'))}</span>`;
- return `<article class="placeCard"><div class="headRow"><div>${nameCard(p)}<p>${esc(addressText(p)||tr('addressNotKnown'))}</p>${bud}</div><span class="routeDistance">${esc(distText(d,approx))}</span></div>
- ${p.schedule?.length?weekHTML(p):esc(tr('noTimes'))}${actionHTML(p)}${sourceHTML(p)}</article>`;}
+function nearCard(p,rank){const slots=availableSlots(p),d=dist(p,cityOrigin(selectedCity())),approx=!precise(p);const bud=`<span class="miniBadge${approx?' approx':''}">${esc(tr(approx?'approxPlace':p.addressLocated?'locatedAddress':'exactPlace'))}</span>`;
+ return `<article class="placeCard"><div class="headRow"><div>${nameCard(p)}<p>${esc(addressText(p)||tr('addressNotKnown'))}</p>${bud}</div><span class="stopNum">${rank}</span><span class="routeDistance">${esc(distText(d,approx))}</span></div>
+ ${hasSchedule(p)?weekHTML(p):esc(tr('noTimes'))}${actionHTML(p)}${sourceHTML(p)}</article>`;}
 function insideRing(x,y,ring){
  let inside=false;
  for(let i=0,j=ring.length-1;i<ring.length;j=i++){
@@ -108,19 +121,19 @@ function cityMessage(){
  $('cityStatus').textContent=city||tr(state.gps?'outsideCity':'selectOrigin');
 }
 function renderNearby(){const search=state.search.trim().toLocaleLowerCase(),filter=state.nearFilter;
- let items=localList().filter(p=>(!search||((p.name||'')+' '+(p.nameHe||'')+' '+(p.nameEn||'')+' '+(addressText(p)||'')+' '+(p.area||'')).toLocaleLowerCase().includes(search))&&(filter==='all'||(filter==='with'?!!p.schedule?.length:!p.schedule?.length)));
+ let items=localList().filter(p=>(!search||((p.name||'')+' '+(p.nameHe||'')+' '+(p.nameEn||'')+' '+(addressText(p)||'')+' '+(p.area||'')+' '+(p.factory?'שטיבלך Minyan Factories Minyonim Factory Shtieblach':'')).toLocaleLowerCase().includes(search))&&(filter==='all'||(filter==='with'?hasSchedule(p):!hasSchedule(p))));
  state.nearSorted=items;
  $('nearSummary').textContent=tr('nearSummary',{count:items.length,google:data.meta.googleMapsRows??0});
- $('nearItems').innerHTML=items.map(nearCard).join('')||`<div class="empty">${esc(tr('noneFound'))}</div>`;
+ $('nearItems').innerHTML=items.map((p,i)=>nearCard(p,i+1)).join('')||`<div class="empty">${esc(tr('noneFound'))}</div>`;
  $('morePlaces').classList.toggle('hidden',true);
- if(state.nearOpen)drawMap('nearMap',items.filter(precise),false);
+ if(state.nearOpen)drawMap('nearMap',items,true);
 }
 function renderLive(){
  const city=selectedCity(),origin=cityOrigin(city);
  const distance=p=>dist(p,origin)??Infinity;
  state.route=localList();
  $('nearMatches').textContent=state.route.length;
- $('liveCount').textContent=state.route.filter(p=>p.schedule?.length).length;
+ $('liveCount').textContent=state.route.filter(hasSchedule).length;
  $('routeItems').innerHTML=state.route.map((p,i)=>{
   const exact=precise(p),d=distance(p);
   const drive=exact&&state.gps&&origin===state.gps?tr('drive',{min:Math.max(1,Math.round(d*1.3/32*60))}):'';
@@ -129,7 +142,7 @@ function renderLive(){
   return `<article class="placeCard"><div class="headRow"><div>${nameCard(p)}<p>${esc([addressText(p),p.localities.length>1?p.localities.join(' / '):p.area].filter(Boolean).join(' · '))}</p></div><span class="stopNum">${i+1}</span></div>
    <p class="estimated">${esc(exact?distText(d)+' · '+(drive||tr('fromCenter')):tr('approxOnly'))}</p>
    ${t?`<p>${esc(tr(today?'nextTime':'firstTime',{time:t.time}))}</p>`:''}
-   ${p.schedule?.length?weekHTML(p):esc(tr('noTimes'))}${actionHTML(p)}${sourceHTML(p)}</article>`;
+   ${hasSchedule(p)?weekHTML(p):esc(tr('noTimes'))}${actionHTML(p)}${sourceHTML(p)}</article>`;
  }).join('')||`<p class="empty">${esc(tr(!city&&!state.gps?'selectOrigin':'noLocal'))}</p>`;
  if(state.liveOpen)drawMap('liveMap',state.route,true);
 }
@@ -162,7 +175,7 @@ function bind(){
  $('clearSearch').addEventListener('click',()=>{state.search='';$('searchShuls').value='';renderNearby();});
  document.querySelectorAll('.pill').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.pill').forEach(e=>e.classList.remove('active'));b.classList.add('active');state.nearFilter=b.dataset.f;state.nearLimit=40;renderNearby();}));
  $('morePlaces').addEventListener('click',()=>{state.nearLimit+=50;renderNearby();});
- document.body.addEventListener('click',e=>{let b=e.target.closest('[data-mark-place]');if(!b)return;let p=data.places.find(x=>x.id===b.dataset.markPlace);if(p)toggleMarked(p,b.dataset.markTime);});
+ document.body.addEventListener('click',e=>{const place=e.target.closest('[data-visit-place]');if(place){const p=data.places.find(x=>x.id===place.dataset.visitPlace);if(p){try{localStorage.setItem('visited-place:'+p.id,visitedPlace(p)?'0':'1');}catch{}renderCurrent();}return;}let b=e.target.closest('[data-mark-place]');if(!b)return;let p=data.places.find(x=>x.id===b.dataset.markPlace);if(p)toggleMarked(p,b.dataset.markTime);});
  $('mapToggle').addEventListener('click',()=>{state.liveOpen=!state.liveOpen;$('liveMapWrap').classList.toggle('hidden',!state.liveOpen);$('mapToggle').textContent=tr(state.liveOpen?'hideMap':'showMap');if(state.liveOpen)renderLive();});
  window.addEventListener('maslul-languagechange',()=>{
   $('mapToggle').textContent=tr(state.liveOpen?'hideMap':'showMap');$('nearMapToggle').textContent=tr(state.nearOpen?'hideMap':'showMap');
