@@ -2,25 +2,25 @@
 <html lang="he" dir="rtl">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#123c45">
-<meta name="app-build" content="2026-11-22-v10"><meta name="description" content="מסלול הצדקה חי – זמני שחרית ממקורות המשתמש ובתי כנסת קרובים מהמפה האישית">
-<link rel="manifest" href="manifest.webmanifest?v=20261122-10"><link rel="icon" href="icon-64.png?v=20261122-10" type="image/png"><link rel="apple-touch-icon" href="icon-192.png?v=20261122-10">
+<meta name="app-build" content="2026-11-22-v11"><meta name="description" content="מסלול הצדקה חי – זמני שחרית ממקורות המשתמש ובתי כנסת קרובים מהמפה האישית">
+<link rel="manifest" href="manifest.webmanifest?v=20261122-11"><link rel="icon" href="icon-64.png?v=20261122-11" type="image/png"><link rel="apple-touch-icon" href="icon-192.png?v=20261122-11">
 <title>מסלול הצדקה חי</title>
-<link rel="stylesheet" href="styles.css?v=20261122-10">
+<link rel="stylesheet" href="styles.css?v=20261122-11">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyo5KtJcH5hQLI=" crossorigin="">
 <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-<script defer src="i18n.js?v=20261122-10"></script>
-<script defer src="app.js?v=20261122-10"></script>
+<script defer src="i18n.js?v=20261122-11"></script>
+<script defer src="app.js?v=20261122-11"></script>
 </head>
 <body>
-<header class="topbar"><div class="brand" id="brandTitle"><img class="brand-icon" src="icon-64.png?v=20261122-10" alt="סמל בית כנסת ומסלול"><span>מסלול הצדקה חי</span></div><div class="topControls"><label for="languageSelect" id="languageLabel">שפה</label><select id="languageSelect" aria-label="Language / שפה / Idioma"><option value="he">עברית</option><option value="en">English</option><option value="es">Español</option></select><button id="topHome" class="ghost small" aria-label="חזרה למסך הראשי">⌂ מסך ראשי</button></div></header>
+<header class="topbar"><div class="brand" id="brandTitle"><img class="brand-icon" src="icon-64.png?v=20261122-11" alt="סמל בית כנסת ומסלול"><span>מסלול הצדקה חי</span></div><div class="topControls"><label for="languageSelect" id="languageLabel">שפה</label><select id="languageSelect" aria-label="Language / שפה / Idioma"><option value="he">עברית</option><option value="en">English</option><option value="es">Español</option></select><button id="topHome" class="ghost small" aria-label="חזרה למסך הראשי">⌂ מסך ראשי</button></div></header>
 <main>
 <div class="dateBox"><label data-i18n="areaLabel" for="areaSelect">בחר עיר</label><select id="areaSelect"><option value="" data-i18n="autoGps">לפי המיקום שלי</option></select><span id="cityStatus" role="status"></span></div>
 <section id="home" class="view active">
- <div class="hero"><img class="hero-mark" src="icon-192.png?v=20261122-10" alt="בית כנסת עם מסלול"><p class="eyebrow">שחרית • לפי המיקום הנוכחי</p><h1>מסלול הצדקה חי</h1><p>מניינים קרובים עם השעות שלהם, בלי לבחור עיר</p></div>
+ <div class="hero"><img class="hero-mark" src="icon-192.png?v=20261122-11" alt="בית כנסת עם מסלול"><p class="eyebrow">שחרית • לפי המיקום הנוכחי</p><h1>מסלול הצדקה חי</h1><p>מניינים קרובים עם השעות שלהם, בלי לבחור עיר</p></div>
  <button id="goLive" class="primary big"><span class="btn-icon">➤</span><span><strong>בתי כנסת ומניינים</strong><small>מנייני שחרית לפי GPS והשעה</small></span></button>
  <div class="homeActions"><button id="installApp" class="outline"><span>⬇</span><span>התקנת אפליקציה</span></button><button id="browserShortcut" class="outline"><span>↗</span><span>התקנת קישור לפתיחה בדפדפן</span></button></div>
  <button id="goNearby" class="secondary smallWide">⌾ <span data-i18n="nearby">בתי כנסת קרובים</span> <span class="muted" id="countSmall"></span></button>
- <p><a href="comparison.html">השוואת חוברות מונסי</a> · <a href="review/">דוח אישור צילומי GoDavening</a></p><p class="homeFoot">הזמנים מתוך החוברות שסיפקת בלבד. אין תוספת זמנים ממקורות אחרים.</p>
+ <p><a href="comparison.html">השוואת חוברות מונסי</a></p><p class="homeFoot">הזמנים מתוך החוברות שסיפקת בלבד. אין תוספת זמנים ממקורות אחרים.</p>
 </section>
 <section id="live" class="view" aria-label="מסלול חי">
  <div class="sectionHead"><div><p class="eyebrow">עדכון לפי GPS</p><h2>בתי כנסת ומניינים</h2></div><button class="outline slim" id="refreshPosition">◎ עדכן מיקום</button></div>
@@ -42,7 +42,7 @@
 </main>
 <div id="toast" role="status" aria-live="polite"></div>
 <div id="installHelp" class="dialogOverlay hidden"><div class="dialog" role="dialog" aria-modal="true" aria-label="התקנת אפליקציה"><h3>התקנת האפליקציה</h3><p id="installHelpText">פתח את האתר ב־Chrome, לחץ על שלוש הנקודות ובחר „התקנת אפליקציה” או „הוספה למסך הבית”.</p><button id="closeInstallHelp" class="primary">סגור</button></div></div>
-<p class="updateStatus" id="versionStatus" aria-live="polite">גרסה 10 • שפות: עברית, אנגלית וספרדית</p>
+<p class="updateStatus" id="versionStatus" aria-live="polite">גרסה 11 • שפות: עברית, אנגלית וספרדית</p>
 <script>
 /* Independent installation/shortcut controls. Work even if app.js fails to load. */
 (function(){
@@ -74,7 +74,7 @@
   },true);
   if(shortcut) shortcut.addEventListener('click',function(evt){
     evt.preventDefault();evt.stopImmediatePropagation();
-    location.assign('./browser-link.html?setup=1&v=20261122-10');
+    location.assign('./browser-link.html?setup=1&v=20261122-11');
   },true);
   if(close) close.addEventListener('click',function(evt){evt.preventDefault();evt.stopImmediatePropagation();hideInfo();},true);
   if(panel) panel.addEventListener('click',function(evt){if(evt.target===panel)hideInfo();});

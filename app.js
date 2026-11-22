@@ -70,7 +70,14 @@ function factoryInfo(p){
   `<div>${esc(tr({all:'factoryDays',wk:'weekdays',sun:'factorySunday'}[day]))} · <bdi>${start}–${end}</bdi> · ${esc(tr('factoryInterval',{minutes}))}</div>`));
  return `<aside class="factoryInfo"><strong>${esc(tr('factoryLabel'))}</strong> · CLICK613 · Minyan Factories · 256 / 2${lines.join('')}</aside>`;
 }
-function hasSchedule(p){return Boolean(p.schedule?.length || p.scheduleNote || p.bookletNotes);}
+function hasSchedule(p){return Boolean(p.clickWeek?.regularWeekday?.length || p.clickWeek?.erevShabbos?.length || p.clickWeek?.shabbos?.length || p.schedule?.length || p.scheduleNote || p.bookletNotes);}
+function clickSchedule(p){
+ if(!p.clickWeek)return '';
+ const he=locale()==='he',groups={regularWeekday:he?'ראשון–חמישי':'Sun–Thu',exceptions:he?'ימים מיוחדים':'Exceptions',erevShabbos:he?'יום שישי':'Friday',shabbos:he?'שבת':'Shabbos',erevYomTov:he?'ערב יום טוב':'Erev Yom Tov',highHolidays:he?'ימים נוראים':'High holidays'};
+ const blocks=Object.entries(groups).flatMap(([k,label])=>(p.clickWeek[k]||[]).map(r=>`<p><b>${esc(label)} · ${esc(r.dayShort||'')} ${esc(r.label)}</b><br><bdi>${esc(r.times.join(' · '))}</bdi></p>`));
+ if(!blocks.length)for(const e of p.clickCardTimes||[])blocks.push(`<p>${esc(e.label)} · ${esc(e.time)}</p>`);
+ return blocks.length?`<details class="hoursRow"><summary>${he?'כל זמני התפילות':'Prayer schedule'} · Click613</summary>${esc(p.clickWeek.weekLabel)}${blocks.join('')}</details>`:'';
+}
 function weekHTML(p){
  const days=['2024-01-01','2024-01-02','2024-01-03','2024-01-04','2024-01-05','2024-01-07'];
  const groups=new Map(),rows=[];
@@ -89,7 +96,7 @@ function weekHTML(p){
 }
 function nearCard(p,rank){const slots=availableSlots(p),d=dist(p,cityOrigin(selectedCity())),approx=!precise(p);const bud=`<span class="miniBadge${approx?' approx':''}">${esc(tr(approx?'approxPlace':p.addressLocated?'locatedAddress':'exactPlace'))}</span>`;
  return `<article class="placeCard"><div class="headRow"><div>${nameCard(p)}<p>${esc(addressText(p)||tr('addressNotKnown'))}</p>${bud}</div><span class="stopNum">${rank}</span><span class="routeDistance">${esc(distText(d,approx))}</span></div>
- ${hasSchedule(p)?weekHTML(p):esc(tr('noTimes'))}${actionHTML(p)}${sourceHTML(p)}</article>`;}
+ ${hasSchedule(p)?weekHTML(p):esc(tr('noTimes'))}${clickSchedule(p)}${actionHTML(p)}${sourceHTML(p)}</article>`;}
 function insideRing(x,y,ring){
  let inside=false;
  for(let i=0,j=ring.length-1;i<ring.length;j=i++){
@@ -105,7 +112,8 @@ function gpsCity(){
   const [west,south,east,north]=s.bounds;
   return x>=west&&x<=east&&y>=south&&y<=north&&s.polygons.some(poly=>insideRing(x,y,poly[0])&&!poly.slice(1).some(h=>insideRing(x,y,h)));
  });
- return shape?.name||'';
+ if(shape && data.places.some(p=>p.localities.includes(shape.name)))return shape.name;
+ let best=3,city='';for(const p of data.places){if(!precise(p)||p.lat==null||p.lon==null)continue;const d=dist(p,state.gps);if(d!=null&&d<best){best=d;city=p.localities[0];}}return city;
 }
 function selectedCity(){return state.area||gpsCity();}
 function cityOrigin(city){return state.gps&&(!state.area||gpsCity()===city)?state.gps:data.centers?.[city];}
@@ -142,7 +150,7 @@ function renderLive(){
   return `<article class="placeCard"><div class="headRow"><div>${nameCard(p)}<p>${esc([addressText(p),p.localities.length>1?p.localities.join(' / '):p.area].filter(Boolean).join(' · '))}</p></div><span class="stopNum">${i+1}</span></div>
    <p class="estimated">${esc(exact?distText(d)+' · '+(drive||tr('fromCenter')):tr('approxOnly'))}</p>
    ${t?`<p>${esc(tr(today?'nextTime':'firstTime',{time:t.time}))}</p>`:''}
-   ${hasSchedule(p)?weekHTML(p):esc(tr('noTimes'))}${actionHTML(p)}${sourceHTML(p)}</article>`;
+   ${hasSchedule(p)?weekHTML(p):esc(tr('noTimes'))}${clickSchedule(p)}${actionHTML(p)}${sourceHTML(p)}</article>`;
  }).join('')||`<p class="empty">${esc(tr(!city&&!state.gps?'selectOrigin':'noLocal'))}</p>`;
  if(state.liveOpen)drawMap('liveMap',state.route,true);
 }
@@ -183,7 +191,7 @@ function bind(){
  $('nearMapToggle').addEventListener('click',()=>{state.nearOpen=!state.nearOpen;$('nearMapWrap').classList.toggle('hidden',!state.nearOpen);$('nearMapToggle').textContent=tr(state.nearOpen?'hideMap':'showMap');if(state.nearOpen)renderNearby();});
 
 }
-async function load(){try{let r=await fetch('./places.json',{cache:'no-store'});if(!r.ok)throw new Error(`HTTP ${r.status}`);let json=await r.json();data.places=json.places;data.meta=json.meta;data.shapes=json.cityShapes;data.centers=Object.fromEntries(data.shapes.map(s=>[s.name,s.center]));
+async function load(){try{let r=await fetch('./data/places.json',{cache:'no-store'});if(!r.ok)throw new Error(`HTTP ${r.status}`);let json=await r.json();data.places=json.places;data.meta=json.meta;data.shapes=json.cityShapes;data.centers={...json.clickCenters,...Object.fromEntries(data.shapes.map(s=>[s.name,s.center]))};
  const cities=[...new Set(data.places.flatMap(p=>p.localities))].sort();
  for(const city of cities)$('areaSelect').add(new Option(city,city));
  renderCurrent();
