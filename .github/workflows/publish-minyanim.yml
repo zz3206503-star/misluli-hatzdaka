@@ -1,4 +1,5 @@
 name: Publish Minyanim
+
 on:
   workflow_dispatch:
   push:
@@ -9,6 +10,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
   pages: write
   id-token: write
 
@@ -17,25 +19,50 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  publish:
+  build:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deploy.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
-      - name: Extract the app and verify the review pages
+
+      - name: Extract and check version 15
         run: |
-          unzip -q Minyanim-v14.zip -d "$RUNNER_TEMP/minyanim"
-          cd "$RUNNER_TEMP/minyanim"
-          test -s index.html
-          test -s places.json
-          test -s Minyanim-Review.html
-          test -s review/index.html
-          test -s review/photos/1.webp
+          unzip -q Minyanim-v14.zip -d site
+          test -s site/editor.js
+          grep -q 'id="exportEdits"' site/index.html
+          grep -q 'גרסה 15' site/index.html
+          test -s site/review/index.html
+
       - uses: actions/upload-pages-artifact@v4
         with:
-          path: ${{ runner.temp }}/minyanim
-      - id: deploy
+          name: github-pages
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.publish.outputs.page_url }}
+    steps:
+      - name: Wait until GitHub can see the uploaded site
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for attempt in {1..30}; do
+            count=$(gh api \
+              "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/artifacts?name=github-pages" \
+              --jq '[.artifacts[] | select(.expired == false)] | length') || count=0
+            if [ "$count" -ge 1 ]; then
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "GitHub could not locate the uploaded site."
+          exit 1
+
+      - name: Publish site
+        id: publish
         uses: actions/deploy-pages@v4
+        with:
+          artifact_name: github-pages
